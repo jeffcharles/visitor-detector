@@ -1,0 +1,59 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+    defaultConfig {
+        applicationId 'com.beyondtechnicallycorrect.visitordetector'
+        minSdkVersion 21
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        debug {
+            buildConfigField 'String', 'ROUTER_IP_ADDRESS', "\"${System.getenv('VISITOR_DETECTOR_ROUTER_IP_ADDRESS')}\""
+            buildConfigField 'String', 'ROUTER_USERNAME', "\"${System.getenv('VISITOR_DETECTOR_ROUTER_USERNAME')}\""
+            buildConfigField 'String', 'ROUTER_PASSWORD', "\"${System.getenv('VISITOR_DETECTOR_ROUTER_PASSWORD')}\""
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    productFlavors {
+    }
+}
+
+kapt {
+    generateStubs = true
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    kapt 'com.google.dagger:dagger-compiler:2.0'
+    compile 'com.google.dagger:dagger:2.0'
+    provided 'org.glassfish:javax.annotation:10.0-b28' // more dagger stuff
+    compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
+    compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
+}
+
+buildscript {
+    ext.kotlin_version = '1.0.0-beta-3595'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+repositories {
+    mavenCentral()
+}
