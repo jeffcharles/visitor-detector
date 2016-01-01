@@ -20,6 +20,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            buildConfigField 'String', 'ROUTER_IP_ADDRESS', "\"${System.getenv('VISITOR_DETECTOR_ROUTER_IP_ADDRESS')}\""
+            buildConfigField 'String', 'ROUTER_USERNAME', "\"${System.getenv('VISITOR_DETECTOR_ROUTER_USERNAME')}\""
+            buildConfigField 'String', 'ROUTER_PASSWORD', "\"${System.getenv('VISITOR_DETECTOR_ROUTER_PASSWORD')}\""
         }
     }
     sourceSets {
