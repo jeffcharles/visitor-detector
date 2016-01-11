@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Visitor Detector</string>
+    <string name="no_devices">No devices</string>
+    <string name="devices_activity_title">Devices</string>
+    <string name="unclassified_devices_tab_title">Unclassified</string>
+    <string name="home_devices_tab_title">Home</string>
 </resources>
