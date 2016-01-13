@@ -49,21 +49,24 @@ class DevicesActivity : FragmentActivity() {
     private class PagerAdapter(fm: FragmentManager, val context: Context) : FragmentPagerAdapter(fm) {
 
         private val unclassifiedDevicesFragment: DevicesFragment
+        private val visitorDevicesFragment: DevicesFragment
         private val homeDevicesFragment: DevicesFragment
 
         init {
             unclassifiedDevicesFragment = DevicesFragment()
+            visitorDevicesFragment = DevicesFragment()
             homeDevicesFragment = DevicesFragment()
         }
 
         override fun getCount(): Int {
-            return 2;
+            return 3;
         }
 
         override fun getItem(position: Int): Fragment {
             return when (position) {
                 0 -> unclassifiedDevicesFragment
-                1 -> homeDevicesFragment
+                1 -> visitorDevicesFragment
+                2 -> homeDevicesFragment
                 else -> throw IllegalArgumentException("Received invalid position argument")
             }
         }
@@ -71,7 +74,8 @@ class DevicesActivity : FragmentActivity() {
         override fun getPageTitle(position: Int): CharSequence {
             return when (position) {
                 0 -> context.getString(R.string.unclassified_devices_tab_title)
-                1 -> context.getString(R.string.home_devices_tab_title)
+                1 -> context.getString(R.string.visitor_devices_tab_title)
+                2 -> context.getString(R.string.home_devices_tab_title)
                 else -> throw IllegalArgumentException("Received invalid position argument")
             }
         }
