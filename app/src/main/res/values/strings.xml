@@ -5,4 +5,6 @@
     <string name="unclassified_devices_tab_title">Unclassified</string>
     <string name="visitor_devices_tab_title">Visitor</string>
     <string name="home_devices_tab_title">Home</string>
+    <string name="device_menu_move_to_visitor">Move to visitor</string>
+    <string name="device_menu_move_to_home">Move to home</string>
 </resources>
