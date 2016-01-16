@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/move_to_visitor"
-        android:title="@string/device_menu_move_to_visitor"
-        app:showAsAction="never" />
+        android:title="@string/device_menu_move_to_visitor" />
     <item
         android:id="@+id/move_to_home"
-        android:title="@string/device_menu_move_to_home"
-        app:showAsAction="never" />
+        android:title="@string/device_menu_move_to_home" />
 </menu>
