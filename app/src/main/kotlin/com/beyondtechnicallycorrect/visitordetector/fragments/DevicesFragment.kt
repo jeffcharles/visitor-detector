@@ -2,16 +2,11 @@ package com.beyondtechnicallycorrect.visitordetector.fragments
 
 import android.os.Bundle
 import android.support.v4.app.ListFragment
-import android.util.Log
 import android.view.*
-import android.widget.AbsListView
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
+import android.widget.*
 import com.beyondtechnicallycorrect.visitordetector.R
 
 class DevicesFragment : ListFragment() {
-
-    private val TAG = "DevicesFragment"
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_devices_list, container, false)
@@ -20,6 +15,9 @@ class DevicesFragment : ListFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         this.listView.setMultiChoiceModeListener(object : AbsListView.MultiChoiceModeListener {
+
+            private val listView = this@DevicesFragment.listView
+
             override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
                 when (item.itemId) {
                     R.id.move_to_home -> throw UnsupportedOperationException()
@@ -34,18 +32,26 @@ class DevicesFragment : ListFragment() {
             }
 
             override fun onDestroyActionMode(mode: ActionMode?) {
+                for(i in 0..(listView.childCount - 1)) {
+                    setIsChecked(position = i, checked = false)
+                }
             }
 
             override fun onItemCheckedStateChanged(mode: ActionMode?, position: Int, id: Long, checked: Boolean) {
-                Log.d(TAG, "onItemCheckedStateChanged started")
+                setIsChecked(position, checked)
             }
 
             override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
                 return false
             }
+
+            private fun setIsChecked(position: Int, checked: Boolean) {
+                (listView.getChildAt(position).findViewById(R.id.device_checkbox) as CheckBox).isChecked = checked
+            }
         })
-        this.listView.setOnItemClickListener {
-            parent, view, position, id -> this.listView.setItemChecked(position, !this.listView.isItemChecked(position))
+        this.listView.setOnItemClickListener { parent, view, position, id ->
+            // does not fire on de-selection but seems to uncheck properly
+            this.listView.setItemChecked(position, !this.listView.isItemChecked(position))
         }
     }
 
