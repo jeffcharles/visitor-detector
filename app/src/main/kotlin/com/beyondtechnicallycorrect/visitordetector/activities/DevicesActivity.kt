@@ -14,12 +14,17 @@ import android.support.v4.view.ViewPager
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
+import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
+import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragmentFactory
+import de.greenrobot.event.EventBus
 import javax.inject.Inject
 
 class DevicesActivity : FragmentActivity() {
 
     @Inject lateinit var devicesOnRouterProvider: DevicesOnRouterProvider
+    @Inject lateinit var devicesFragmentFactory: DevicesFragmentFactory
+    @Inject lateinit var eventBus: EventBus
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +33,7 @@ class DevicesActivity : FragmentActivity() {
         setContentView(R.layout.activity_devices)
 
         val pager = this.findViewById(R.id.pager) as ViewPager
-        val adapter = PagerAdapter(this.supportFragmentManager, this)
+        val adapter = PagerAdapter(this.supportFragmentManager, this, devicesFragmentFactory, eventBus)
         pager.adapter = adapter
         val tabLayout = this.findViewById(R.id.tabs) as TabLayout
         tabLayout.setupWithViewPager(pager)
@@ -46,16 +51,17 @@ class DevicesActivity : FragmentActivity() {
         }
     }
 
-    private class PagerAdapter(fm: FragmentManager, val context: Context) : FragmentPagerAdapter(fm) {
+    private class PagerAdapter(fm: FragmentManager, val context: Context, val devicesFragmentFactory: DevicesFragmentFactory, val eventBus: EventBus) : FragmentPagerAdapter(fm) {
 
         private val unclassifiedDevicesFragment: DevicesFragment
         private val visitorDevicesFragment: DevicesFragment
         private val homeDevicesFragment: DevicesFragment
 
         init {
-            unclassifiedDevicesFragment = DevicesFragment()
-            visitorDevicesFragment = DevicesFragment()
-            homeDevicesFragment = DevicesFragment()
+            unclassifiedDevicesFragment = devicesFragmentFactory.create()
+            visitorDevicesFragment = devicesFragmentFactory.create()
+            homeDevicesFragment = devicesFragmentFactory.create()
+            eventBus.register(this)
         }
 
         override fun getCount(): Int {
@@ -78,6 +84,11 @@ class DevicesActivity : FragmentActivity() {
                 2 -> context.getString(R.string.home_devices_tab_title)
                 else -> throw IllegalArgumentException("Received invalid position argument")
             }
+        }
+
+        // used by EventBus
+        public fun onEvent(event: DevicesMovedToVisitorList) {
+            visitorDevicesFragment.addDevices(event.devices)
         }
 
         public fun updateDevices(devices: Array<String>) {
