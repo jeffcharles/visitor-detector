@@ -5,8 +5,17 @@ import android.support.v4.app.ListFragment
 import android.view.*
 import android.widget.*
 import com.beyondtechnicallycorrect.visitordetector.R
+import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
+import de.greenrobot.event.EventBus
 
-class DevicesFragment : ListFragment() {
+class DevicesFragment(val eventBus: EventBus) : ListFragment() {
+
+    private var devices: Array<String> = arrayOf()
+
+    public fun addDevices(devicesToAdd: Set<String>) {
+        devices = (devices.toHashSet() + devicesToAdd).toTypedArray()
+        recreateArrayAdapter()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_devices_list, container, false)
@@ -21,9 +30,10 @@ class DevicesFragment : ListFragment() {
             override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
                 when (item.itemId) {
                     R.id.move_to_home -> throw UnsupportedOperationException()
-                    R.id.move_to_visitor -> throw UnsupportedOperationException()
-                    else -> return false
+                    R.id.move_to_visitor -> moveDevicesToVisitorList()
+                    else -> throw UnsupportedOperationException()
                 }
+                return true
             }
 
             override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
@@ -56,6 +66,25 @@ class DevicesFragment : ListFragment() {
     }
 
     public fun updateDevices(devices: Array<String>) {
+        this.devices = devices
+        recreateArrayAdapter()
+    }
+
+    private fun recreateArrayAdapter() {
+        // this is very resource intensive and not a good idea so a better approach should be used
         this.listAdapter = ArrayAdapter(this.activity, R.layout.device_list_item, R.id.device, devices)
+    }
+
+    private fun moveDevicesToVisitorList() {
+        val allDevices: MutableSet<String> = devices.toHashSet()
+        val devicesToMove: MutableSet<String> = hashSetOf()
+        for (i in 0..(this.listView.childCount - 1)) {
+            if (this.listView.isItemChecked(i)) {
+                devicesToMove.add(this.devices[i])
+            }
+        }
+        devices = (allDevices - devicesToMove).toTypedArray()
+        recreateArrayAdapter()
+        eventBus.post(DevicesMovedToVisitorList(devicesToMove))
     }
 }
