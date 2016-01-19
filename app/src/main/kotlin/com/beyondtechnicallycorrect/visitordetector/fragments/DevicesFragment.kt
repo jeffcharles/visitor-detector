@@ -5,6 +5,7 @@ import android.support.v4.app.ListFragment
 import android.view.*
 import android.widget.*
 import com.beyondtechnicallycorrect.visitordetector.R
+import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import de.greenrobot.event.EventBus
 
@@ -29,7 +30,7 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
 
             override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
                 when (item.itemId) {
-                    R.id.move_to_home -> throw UnsupportedOperationException()
+                    R.id.move_to_home -> moveDevicesToHomeList()
                     R.id.move_to_visitor -> moveDevicesToVisitorList()
                     else -> throw UnsupportedOperationException()
                 }
@@ -72,10 +73,18 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
 
     private fun recreateArrayAdapter() {
         // this is very resource intensive and not a good idea so a better approach should be used
-        this.listAdapter = ArrayAdapter(this.activity, R.layout.device_list_item, R.id.device, devices)
+        this.listAdapter = ArrayAdapter(this.context, R.layout.device_list_item, R.id.device, devices)
     }
 
     private fun moveDevicesToVisitorList() {
+        moveDevicesToList { devicesToMove -> eventBus.post(DevicesMovedToVisitorList(devicesToMove)) }
+    }
+
+    private fun moveDevicesToHomeList() {
+        moveDevicesToList { devicesToMove -> eventBus.post(DevicesMovedToHomeList(devicesToMove)) }
+    }
+
+    private fun moveDevicesToList(postEvent: (MutableSet<String>) -> Unit) {
         val allDevices: MutableSet<String> = devices.toHashSet()
         val devicesToMove: MutableSet<String> = hashSetOf()
         for (i in 0..(this.listView.childCount - 1)) {
@@ -85,6 +94,6 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
         }
         devices = (allDevices - devicesToMove).toTypedArray()
         recreateArrayAdapter()
-        eventBus.post(DevicesMovedToVisitorList(devicesToMove))
+        postEvent(devicesToMove)
     }
 }

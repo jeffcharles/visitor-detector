@@ -14,6 +14,7 @@ import android.support.v4.view.ViewPager
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
+import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragmentFactory
@@ -84,6 +85,11 @@ class DevicesActivity : FragmentActivity() {
                 2 -> context.getString(R.string.home_devices_tab_title)
                 else -> throw IllegalArgumentException("Received invalid position argument")
             }
+        }
+
+        // used by EventBus
+        public fun onEvent(event: DevicesMovedToHomeList) {
+            homeDevicesFragment.addDevices(event.devices)
         }
 
         // used by EventBus
