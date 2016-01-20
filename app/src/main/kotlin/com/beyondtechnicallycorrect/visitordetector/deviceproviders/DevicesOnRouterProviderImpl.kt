@@ -5,7 +5,7 @@ import java.util.*
 import javax.inject.Inject
 
 class DevicesOnRouterProviderImpl @Inject constructor(val routerApi: RouterApi) : DevicesOnRouterProvider {
-    override fun getDevicesOnRouter(): Array<String> {
+    override fun getDevicesOnRouter(): List<String> {
         val loginCall =
             routerApi.login(
                 loginBody = JsonRpcRequest(
@@ -39,6 +39,6 @@ class DevicesOnRouterProviderImpl @Inject constructor(val routerApi: RouterApi) 
             throw RuntimeException("Got a null result for mac_hints")
         }
 
-        return macAddressHints.map { "${it[0]} - ${it[1]}" }.toTypedArray()
+        return macAddressHints.map { "${it[0]} - ${it[1]}" }
     }
 }

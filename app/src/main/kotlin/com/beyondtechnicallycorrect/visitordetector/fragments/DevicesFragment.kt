@@ -11,10 +11,10 @@ import de.greenrobot.event.EventBus
 
 class DevicesFragment(val eventBus: EventBus) : ListFragment() {
 
-    private var devices: Array<String> = arrayOf()
+    private var devices: List<String> = listOf()
 
     public fun addDevices(devicesToAdd: Set<String>) {
-        devices = (devices.toHashSet() + devicesToAdd).toTypedArray()
+        devices = (devices.toHashSet() + devicesToAdd).toList()
         recreateArrayAdapter()
     }
 
@@ -67,7 +67,7 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
         }
     }
 
-    public fun updateDevices(devices: Array<String>) {
+    public fun updateDevices(devices: List<String>) {
         this.devices = devices
         recreateArrayAdapter()
     }
@@ -93,7 +93,7 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
                 devicesToMove.add(this.devices[i])
             }
         }
-        devices = (allDevices - devicesToMove).toTypedArray()
+        devices = (allDevices - devicesToMove).toList()
         recreateArrayAdapter()
         postEvent(devicesToMove)
     }

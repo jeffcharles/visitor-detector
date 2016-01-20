@@ -42,12 +42,12 @@ class DevicesActivity : FragmentActivity() {
         GetDevicesTask(devicesOnRouterProvider, adapter).execute()
     }
 
-    private class GetDevicesTask(val devicesOnRouterProvider: DevicesOnRouterProvider, val adapter: PagerAdapter) : AsyncTask<Void, Void, Array<String>>() {
-        override fun doInBackground(vararg params: Void?): Array<String>? {
+    private class GetDevicesTask(val devicesOnRouterProvider: DevicesOnRouterProvider, val adapter: PagerAdapter) : AsyncTask<Void, Void, List<String>>() {
+        override fun doInBackground(vararg params: Void?): List<String> {
             return devicesOnRouterProvider.getDevicesOnRouter()
         }
 
-        override fun onPostExecute(devices: Array<String>) {
+        override fun onPostExecute(devices: List<String>) {
             adapter.updateDevices(devices)
         }
     }
@@ -97,7 +97,7 @@ class DevicesActivity : FragmentActivity() {
             visitorDevicesFragment.addDevices(event.devices)
         }
 
-        public fun updateDevices(devices: Array<String>) {
+        public fun updateDevices(devices: List<String>) {
             unclassifiedDevicesFragment.updateDevices(devices)
         }
     }
