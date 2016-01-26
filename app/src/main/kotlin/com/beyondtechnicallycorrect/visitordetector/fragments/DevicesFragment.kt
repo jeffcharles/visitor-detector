@@ -1,5 +1,6 @@
 package com.beyondtechnicallycorrect.visitordetector.fragments
 
+import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.ListFragment
 import android.view.*
@@ -11,11 +12,22 @@ import de.greenrobot.event.EventBus
 
 class DevicesFragment(val eventBus: EventBus) : ListFragment() {
 
-    private var devices: List<String> = listOf()
+    private var deviceArrayAdapter: ArrayAdapter<String>? = null
+    private val devices: MutableList<String> = arrayListOf()
 
-    public fun addDevices(devicesToAdd: Set<String>) {
-        devices = (devices.toHashSet() + devicesToAdd).toList()
-        recreateArrayAdapter()
+    public fun addDevices(devicesToAdd: Collection<String>) {
+        if (deviceArrayAdapter != null) {
+            deviceArrayAdapter?.addAll(devicesToAdd)
+        } else {
+            devices.addAll(devicesToAdd)
+        }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        deviceArrayAdapter =
+            ArrayAdapter(this.context, R.layout.device_list_item, R.id.device, devices)
+        this.listAdapter = deviceArrayAdapter
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View {
@@ -27,14 +39,13 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
         super.onViewCreated(view, savedInstanceState)
         this.listView.setMultiChoiceModeListener(object : AbsListView.MultiChoiceModeListener {
 
-            private val listView = this@DevicesFragment.listView
-
-            override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
+            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
                 when (item.itemId) {
                     R.id.move_to_home -> moveDevicesToHomeList()
                     R.id.move_to_visitor -> moveDevicesToVisitorList()
                     else -> throw UnsupportedOperationException()
                 }
+                mode.finish()
                 return true
             }
 
@@ -67,14 +78,14 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
         }
     }
 
-    public fun updateDevices(devices: List<String>) {
-        this.devices = devices
-        recreateArrayAdapter()
-    }
-
-    private fun recreateArrayAdapter() {
-        // this is very resource intensive and not a good idea so a better approach should be used
-        this.listAdapter = ArrayAdapter(this.context, R.layout.device_list_item, R.id.device, devices)
+    public fun setDevices(devices: List<String>) {
+        if (deviceArrayAdapter != null) {
+            deviceArrayAdapter?.clear()
+            deviceArrayAdapter?.addAll(devices)
+        } else {
+            this.devices.clear()
+            this.devices.addAll(devices)
+        }
     }
 
     private fun moveDevicesToVisitorList() {
@@ -85,16 +96,16 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
         moveDevicesToList { devicesToMove -> eventBus.post(DevicesMovedToHomeList(devicesToMove)) }
     }
 
-    private fun moveDevicesToList(postEvent: (MutableSet<String>) -> Unit) {
-        val allDevices: MutableSet<String> = devices.toHashSet()
-        val devicesToMove: MutableSet<String> = hashSetOf()
-        for (i in 0..(this.listView.childCount - 1)) {
-            if (this.listView.isItemChecked(i)) {
-                devicesToMove.add(this.devices[i])
+    private fun moveDevicesToList(postEvent: (Collection<String>) -> Unit) {
+        val checkedItemPositions = this.listView.checkedItemPositions
+        val checkedIndexes: MutableSet<Int> = hashSetOf()
+        for (i in 0..(checkedItemPositions.size() - 1)) {
+            if (checkedItemPositions.valueAt(i)) {
+                checkedIndexes.add(checkedItemPositions.keyAt(i))
             }
         }
-        devices = (allDevices - devicesToMove).toList()
-        recreateArrayAdapter()
+        val devicesToMove = checkedIndexes.mapNotNull { deviceArrayAdapter?.getItem(it) }
+        devicesToMove.forEach { deviceArrayAdapter?.remove(it) }
         postEvent(devicesToMove)
     }
 }
