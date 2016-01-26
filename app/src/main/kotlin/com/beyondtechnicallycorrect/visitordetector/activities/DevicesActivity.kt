@@ -48,7 +48,7 @@ class DevicesActivity : FragmentActivity() {
         }
 
         override fun onPostExecute(devices: List<String>) {
-            adapter.updateDevices(devices)
+            adapter.setUnclassifiedDevices(devices)
         }
     }
 
@@ -97,8 +97,8 @@ class DevicesActivity : FragmentActivity() {
             visitorDevicesFragment.addDevices(event.devices)
         }
 
-        public fun updateDevices(devices: List<String>) {
-            unclassifiedDevicesFragment.updateDevices(devices)
+        public fun setUnclassifiedDevices(devices: List<String>) {
+            unclassifiedDevicesFragment.setDevices(devices)
         }
     }
 }
