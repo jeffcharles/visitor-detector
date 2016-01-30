@@ -9,6 +9,7 @@ import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import de.greenrobot.event.EventBus
+import timber.log.Timber
 
 class DevicesFragment(val eventBus: EventBus) : ListFragment() {
 
@@ -25,6 +26,7 @@ class DevicesFragment(val eventBus: EventBus) : ListFragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+        Timber.v("Attached Timber")
         deviceArrayAdapter =
             ArrayAdapter(this.context, R.layout.device_list_item, R.id.device, devices)
         this.listAdapter = deviceArrayAdapter

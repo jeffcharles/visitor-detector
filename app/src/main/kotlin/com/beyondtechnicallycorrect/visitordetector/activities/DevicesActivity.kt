@@ -19,6 +19,7 @@ import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitor
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragmentFactory
 import de.greenrobot.event.EventBus
+import timber.log.Timber
 import javax.inject.Inject
 
 class DevicesActivity : FragmentActivity() {
@@ -48,6 +49,7 @@ class DevicesActivity : FragmentActivity() {
         }
 
         override fun onPostExecute(devices: List<String>) {
+            Timber.v("Finished getting devices timber")
             adapter.setUnclassifiedDevices(devices)
         }
     }
