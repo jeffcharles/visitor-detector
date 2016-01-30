@@ -40,6 +40,9 @@ android {
     }
     productFlavors {
     }
+    dataBinding {
+        enabled = true
+    }
 }
 
 kapt {

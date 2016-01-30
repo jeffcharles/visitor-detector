@@ -11,10 +11,9 @@ import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitor
 import de.greenrobot.event.EventBus
 import timber.log.Timber
 
-class DevicesFragment(val eventBus: EventBus) : ListFragment() {
+class DevicesFragment(val eventBus: EventBus, val devices: MutableList<String>) : ListFragment() {
 
     private var deviceArrayAdapter: ArrayAdapter<String>? = null
-    private val devices: MutableList<String> = arrayListOf()
 
     public fun addDevices(devicesToAdd: Collection<String>) {
         if (deviceArrayAdapter != null) {
