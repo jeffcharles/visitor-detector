@@ -9,7 +9,8 @@ class VisitorDetectorApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        applicationComponent = DaggerApplicationComponent.create()
+        applicationComponent =
+            DaggerApplicationComponent.builder().applicationModule(ApplicationModule(this)).build()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
