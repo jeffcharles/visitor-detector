@@ -62,7 +62,7 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<String>) 
             }
 
             override fun onItemCheckedStateChanged(mode: ActionMode?, position: Int, id: Long, checked: Boolean) {
-                setIsChecked(position, checked)
+                setIsChecked(position - listView.firstVisiblePosition, checked)
             }
 
             override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {

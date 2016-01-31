@@ -1,10 +1,6 @@
 package com.beyondtechnicallycorrect.visitordetector.activities
 
-import android.app.ActionBar
-import android.app.ListActivity
 import android.content.Context
-import android.databinding.ObservableArrayList
-import android.databinding.ObservableList
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.TabLayout
@@ -19,6 +15,8 @@ import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRou
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
+import com.beyondtechnicallycorrect.visitordetector.persistence.DevicePersistence
+import com.beyondtechnicallycorrect.visitordetector.persistence.Devices
 import de.greenrobot.event.EventBus
 import timber.log.Timber
 import javax.inject.Inject
@@ -27,6 +25,7 @@ class DevicesActivity : FragmentActivity() {
 
     @Inject lateinit var devicesOnRouterProvider: DevicesOnRouterProvider
     @Inject lateinit var eventBus: EventBus
+    @Inject lateinit var devicePersistence: DevicePersistence
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +34,9 @@ class DevicesActivity : FragmentActivity() {
         setContentView(R.layout.activity_devices)
 
         val pager = this.findViewById(R.id.pager) as ViewPager
-        val adapter = PagerAdapter(this.supportFragmentManager, this, eventBus)
+        val savedDevices = devicePersistence.getSavedDevices()
+        val adapter =
+            PagerAdapter(this.supportFragmentManager, this, eventBus, devicePersistence, savedDevices)
         pager.adapter = adapter
         val tabLayout = this.findViewById(R.id.tabs) as TabLayout
         tabLayout.setupWithViewPager(pager)
@@ -48,26 +49,29 @@ class DevicesActivity : FragmentActivity() {
             return devicesOnRouterProvider.getDevicesOnRouter()
         }
 
-        override fun onPostExecute(devices: List<String>) {
-            Timber.v("Finished getting devices timber")
-            adapter.setUnclassifiedDevices(devices)
+        override fun onPostExecute(connectedDevices: List<String>) {
+            Timber.v("Finished getting devices")
+            adapter.setConnectedDevices(connectedDevices)
         }
     }
 
-    private class PagerAdapter(fm: FragmentManager, val context: Context, val eventBus: EventBus) : FragmentPagerAdapter(fm) {
+    private class PagerAdapter(
+        fm: FragmentManager,
+        val context: Context,
+        val eventBus: EventBus,
+        val devicePersistence: DevicePersistence,
+        val savedDevices: Devices
+    ) : FragmentPagerAdapter(fm) {
 
-        private val visitorDevicesList: ObservableList<String>
-        private val homeDevicesList: ObservableList<String>
+        private val visitorDevicesList: MutableList<String>
+        private val homeDevicesList: MutableList<String>
         private val unclassifiedDevicesFragment: DevicesFragment
         private val visitorDevicesFragment: DevicesFragment
         private val homeDevicesFragment: DevicesFragment
 
         init {
-            val devicesListChangedCallback = DevicesListChangedCallback()
-            visitorDevicesList = ObservableArrayList<String>()
-            visitorDevicesList.addOnListChangedCallback(devicesListChangedCallback)
-            homeDevicesList = ObservableArrayList<String>()
-            homeDevicesList.addOnListChangedCallback(devicesListChangedCallback)
+            visitorDevicesList = savedDevices.visitorDevices.toArrayList()
+            homeDevicesList = savedDevices.homeDevices.toArrayList()
             unclassifiedDevicesFragment = DevicesFragment(eventBus, arrayListOf())
             visitorDevicesFragment = DevicesFragment(eventBus, visitorDevicesList)
             homeDevicesFragment = DevicesFragment(eventBus, homeDevicesList)
@@ -99,39 +103,25 @@ class DevicesActivity : FragmentActivity() {
         // used by EventBus
         public fun onEvent(event: DevicesMovedToHomeList) {
             homeDevicesFragment.addDevices(event.devices)
+            save()
         }
 
         // used by EventBus
         public fun onEvent(event: DevicesMovedToVisitorList) {
             visitorDevicesFragment.addDevices(event.devices)
+            save()
         }
 
-        public fun setUnclassifiedDevices(devices: List<String>) {
-            unclassifiedDevicesFragment.setDevices(devices)
-        }
-    }
-
-    private class DevicesListChangedCallback : ObservableList.OnListChangedCallback<ObservableList<String>>() {
-
-        override fun onItemRangeMoved(sender: ObservableList<String>, fromPosition: Int, toPosition: Int, itemCount: Int) {
-            Timber.v("onItemRangeMoved")
+        public fun setConnectedDevices(connectedDevices: List<String>) {
+            val unclassifiedDevices =
+                (connectedDevices.toSet() - homeDevicesList.toSet() - visitorDevicesList.toSet()).toArrayList()
+            unclassifiedDevicesFragment.setDevices(unclassifiedDevices)
         }
 
-        override fun onChanged(sender: ObservableList<String>) {
-            Timber.v("onChanged")
+        private fun save() {
+            devicePersistence.saveDevices(
+                Devices(visitorDevices = visitorDevicesList, homeDevices = homeDevicesList)
+            )
         }
-
-        override fun onItemRangeInserted(sender: ObservableList<String>, positionStart: Int, itemCount: Int) {
-            Timber.v("onItemRangeInserted")
-        }
-
-        override fun onItemRangeRemoved(sender: ObservableList<String>, positionStart: Int, itemCount: Int) {
-            Timber.v("onItemRangeRemoved")
-        }
-
-        override fun onItemRangeChanged(sender: ObservableList<String>, positionStart: Int, itemCount: Int) {
-            Timber.v("onItemRangeChanged")
-        }
-
     }
 }
