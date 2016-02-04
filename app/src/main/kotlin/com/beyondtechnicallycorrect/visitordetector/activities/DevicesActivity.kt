@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentActivity
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
+import com.beyondtechnicallycorrect.visitordetector.AlarmSchedulingHelper
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
@@ -26,10 +27,13 @@ class DevicesActivity : FragmentActivity() {
     @Inject lateinit var devicesOnRouterProvider: DevicesOnRouterProvider
     @Inject lateinit var eventBus: EventBus
     @Inject lateinit var devicePersistence: DevicePersistence
+    @Inject lateinit var alarmSchedulingHelper: AlarmSchedulingHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         (this.application as VisitorDetectorApplication).getApplicationComponent().inject(this)
+
+        alarmSchedulingHelper.setupAlarm()
 
         setContentView(R.layout.activity_devices)
 

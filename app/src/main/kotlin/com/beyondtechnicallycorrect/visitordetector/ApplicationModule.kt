@@ -1,5 +1,6 @@
 package com.beyondtechnicallycorrect.visitordetector
 
+import android.app.AlarmManager
 import android.content.Context
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DeviceProvidersModule
 import com.google.gson.Gson
@@ -13,6 +14,10 @@ import javax.inject.Singleton
     includes = arrayOf(DeviceProvidersModule::class)
 )
 class ApplicationModule(val applicationContext: Context) {
+    @Provides @Singleton fun provideAlarmManager(): AlarmManager {
+        return applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    }
+
     @Provides @Singleton @Named("applicationContext") fun provideApplicationContext(): Context {
         return applicationContext
     }
