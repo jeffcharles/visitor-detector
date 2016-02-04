@@ -14,6 +14,9 @@ public class DevicePersistence @Inject constructor(
     val gson: Gson
 ) {
     fun getSavedDevices(): Devices {
+        if (!applicationContext.getFileStreamPath("devices.json").exists()) {
+            return Devices(visitorDevices = listOf(), homeDevices = listOf())
+        }
         var devicesAsJson: String = ""
         BufferedReader(InputStreamReader(applicationContext.openFileInput("devices.json"), Charsets.UTF_8)).use {
             reader -> devicesAsJson = reader.readText()
