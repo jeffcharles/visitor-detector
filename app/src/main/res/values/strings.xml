@@ -7,4 +7,6 @@
     <string name="home_devices_tab_title">Home</string>
     <string name="device_menu_move_to_visitor">Move to visitor</string>
     <string name="device_menu_move_to_home">Move to home</string>
+    <string name="visitor_detected_notification_title">Visitor Detected</string>
+    <string name="visitor_detected_notification_text">A non-home device has been detected on the network</string>
 </resources>
