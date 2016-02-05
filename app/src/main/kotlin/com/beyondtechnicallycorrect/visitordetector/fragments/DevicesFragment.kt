@@ -31,9 +31,9 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<String>) 
         this.listAdapter = deviceArrayAdapter
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
         super.onCreateView(inflater, container, savedInstanceState)
-        return inflater.inflate(R.layout.fragment_devices_list, container, false)
+        return inflater!!.inflate(R.layout.fragment_devices_list, container, false)
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {

@@ -74,9 +74,9 @@ class DevicesActivity : FragmentActivity() {
         private val homeDevicesFragment: DevicesFragment
 
         init {
-            visitorDevicesList = savedDevices.visitorDevices.toArrayList()
-            homeDevicesList = savedDevices.homeDevices.toArrayList()
-            unclassifiedDevicesFragment = DevicesFragment(eventBus, arrayListOf())
+            visitorDevicesList = savedDevices.visitorDevices.toMutableList()
+            homeDevicesList = savedDevices.homeDevices.toMutableList()
+            unclassifiedDevicesFragment = DevicesFragment(eventBus, mutableListOf())
             visitorDevicesFragment = DevicesFragment(eventBus, visitorDevicesList)
             homeDevicesFragment = DevicesFragment(eventBus, homeDevicesList)
             eventBus.register(this)
@@ -118,7 +118,7 @@ class DevicesActivity : FragmentActivity() {
 
         public fun setConnectedDevices(connectedDevices: List<String>) {
             val unclassifiedDevices =
-                (connectedDevices.toSet() - homeDevicesList.toSet() - visitorDevicesList.toSet()).toArrayList()
+                (connectedDevices.toSet() - homeDevicesList.toSet() - visitorDevicesList.toSet()).toMutableList()
             unclassifiedDevicesFragment.setDevices(unclassifiedDevices)
         }
 
