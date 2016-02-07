@@ -9,6 +9,7 @@ package installed.
 While work proceeds with adding configurability to the app, the following environment variables
 need to be set at build-time for the app to be useful:
 
+- `VISITOR_DETECTOR_WIFI_SSIDS`: the WiFi SSIDs that are considered a home network
 - `VISITOR_DETECTOR_ROUTER_IP_ADDRESS`: the router's IP address (e.g., `192.168.1.1`)
-- `VISITOR_DETECTOR_USERNAME`: the username to login into the router with
-- `VISITOR_DETECTOR_PASSWORD`: the password to login into the router with
+- `VISITOR_DETECTOR_ROUTER_USERNAME`: the username to login into the router with
+- `VISITOR_DETECTOR_ROUTER_PASSWORD`: the password to login into the router with

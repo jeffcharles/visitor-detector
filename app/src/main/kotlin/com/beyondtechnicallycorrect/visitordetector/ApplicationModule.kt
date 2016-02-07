@@ -2,6 +2,7 @@ package com.beyondtechnicallycorrect.visitordetector
 
 import android.app.AlarmManager
 import android.content.Context
+import android.net.wifi.WifiManager
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DeviceProvidersModule
 import com.google.gson.Gson
 import dagger.Module
@@ -28,5 +29,9 @@ class ApplicationModule(val applicationContext: Context) {
 
     @Provides @Singleton fun provideGson(): Gson {
         return Gson()
+    }
+
+    @Provides @Singleton fun provideWifiManager(): WifiManager {
+        return applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     }
 }
