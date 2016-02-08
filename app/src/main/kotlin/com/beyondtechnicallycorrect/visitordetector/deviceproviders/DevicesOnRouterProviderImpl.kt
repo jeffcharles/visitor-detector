@@ -10,7 +10,7 @@ class DevicesOnRouterProviderImpl @Inject constructor(
     val routerApi: RouterApi,
     val wifiManager: WifiManager
 ) : DevicesOnRouterProvider {
-    override fun getDevicesOnRouter(): List<String> {
+    override fun getDevicesOnRouter(): List<RouterDevice> {
         val onHomeWifi =
             BuildConfig.DEBUG ||
             BuildConfig.WIFI_SSIDS
@@ -55,6 +55,6 @@ class DevicesOnRouterProviderImpl @Inject constructor(
             throw RuntimeException("Got a null result for mac_hints")
         }
 
-        return macAddressHints.map { "${it[0]} - ${it[1]}" }
+        return macAddressHints.map { RouterDevice(macAddress = it[0], hostName = it[1]) }
     }
 }

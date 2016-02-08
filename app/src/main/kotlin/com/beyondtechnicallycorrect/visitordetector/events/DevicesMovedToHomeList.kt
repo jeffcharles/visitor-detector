@@ -1,3 +1,5 @@
 package com.beyondtechnicallycorrect.visitordetector.events
 
-data class DevicesMovedToHomeList(val devices: Collection<String>)
+import com.beyondtechnicallycorrect.visitordetector.models.Device
+
+data class DevicesMovedToHomeList(val devices: Collection<Device>)

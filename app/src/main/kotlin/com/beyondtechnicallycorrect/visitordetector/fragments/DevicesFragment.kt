@@ -6,16 +6,18 @@ import android.support.v4.app.ListFragment
 import android.view.*
 import android.widget.*
 import com.beyondtechnicallycorrect.visitordetector.R
+import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
+import com.beyondtechnicallycorrect.visitordetector.models.Device
 import de.greenrobot.event.EventBus
 import timber.log.Timber
 
-class DevicesFragment(val eventBus: EventBus, val devices: MutableList<String>) : ListFragment() {
+class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) : ListFragment() {
 
-    private var deviceArrayAdapter: ArrayAdapter<String>? = null
+    private var deviceArrayAdapter: ArrayAdapter<Device>? = null
 
-    public fun addDevices(devicesToAdd: Collection<String>) {
+    public fun addDevices(devicesToAdd: Collection<Device>) {
         if (deviceArrayAdapter != null) {
             deviceArrayAdapter?.addAll(devicesToAdd)
         } else {
@@ -79,13 +81,15 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<String>) 
         }
     }
 
-    public fun setDevices(devices: List<String>) {
+    public fun setDevices(devices: List<RouterDevice>) {
+        val transformedDevices =
+            devices.map { Device(macAddress = it.macAddress, hostName = it.hostName) }
         if (deviceArrayAdapter != null) {
             deviceArrayAdapter?.clear()
-            deviceArrayAdapter?.addAll(devices)
+            deviceArrayAdapter?.addAll(transformedDevices)
         } else {
             this.devices.clear()
-            this.devices.addAll(devices)
+            this.devices.addAll(transformedDevices)
         }
     }
 
@@ -97,7 +101,7 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<String>) 
         moveDevicesToList { devicesToMove -> eventBus.post(DevicesMovedToHomeList(devicesToMove)) }
     }
 
-    private fun moveDevicesToList(postEvent: (Collection<String>) -> Unit) {
+    private fun moveDevicesToList(postEvent: (Collection<Device>) -> Unit) {
         val checkedItemPositions = this.listView.checkedItemPositions
         val checkedIndexes: MutableSet<Int> = hashSetOf()
         for (i in 0..(checkedItemPositions.size() - 1)) {

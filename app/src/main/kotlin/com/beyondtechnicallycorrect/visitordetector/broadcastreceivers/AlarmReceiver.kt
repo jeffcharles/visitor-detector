@@ -10,6 +10,7 @@ import com.beyondtechnicallycorrect.visitordetector.AlarmSchedulingHelper
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
+import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
 import com.beyondtechnicallycorrect.visitordetector.persistence.DevicePersistence
 import timber.log.Timber
 import javax.inject.Inject
@@ -33,14 +34,15 @@ public class AlarmReceiver : BroadcastReceiver() {
         val context: Context,
         val devicesOnRouterProvider: DevicesOnRouterProvider,
         val devicePersistence: DevicePersistence
-    ) : AsyncTask<Void, Void, List<String>>() {
-        override fun doInBackground(vararg params: Void?): List<String> {
+    ) : AsyncTask<Void, Void, List<RouterDevice>>() {
+        override fun doInBackground(vararg params: Void?): List<RouterDevice> {
             return devicesOnRouterProvider.getDevicesOnRouter()
         }
 
-        override fun onPostExecute(connectedDevices: List<String>) {
+        override fun onPostExecute(connectedDevices: List<RouterDevice>) {
             val savedDevices = devicePersistence.getSavedDevices()
-            val nonHomeDevices = connectedDevices.toSet() - savedDevices.homeDevices.toSet()
+            val nonHomeDevices =
+                connectedDevices.map { it.macAddress }.toSet() - savedDevices.homeDevices.toSet()
             if (nonHomeDevices.any()) {
                 Timber.d("At least one non-home device")
                 val notification = NotificationCompat.Builder(context)
