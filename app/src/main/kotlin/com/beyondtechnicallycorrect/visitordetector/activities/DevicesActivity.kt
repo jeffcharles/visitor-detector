@@ -13,9 +13,11 @@ import com.beyondtechnicallycorrect.visitordetector.AlarmSchedulingHelper
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
+import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
+import com.beyondtechnicallycorrect.visitordetector.models.Device
 import com.beyondtechnicallycorrect.visitordetector.persistence.DevicePersistence
 import com.beyondtechnicallycorrect.visitordetector.persistence.Devices
 import de.greenrobot.event.EventBus
@@ -48,12 +50,12 @@ class DevicesActivity : FragmentActivity() {
         GetDevicesTask(devicesOnRouterProvider, adapter).execute()
     }
 
-    private class GetDevicesTask(val devicesOnRouterProvider: DevicesOnRouterProvider, val adapter: PagerAdapter) : AsyncTask<Void, Void, List<String>>() {
-        override fun doInBackground(vararg params: Void?): List<String> {
+    private class GetDevicesTask(val devicesOnRouterProvider: DevicesOnRouterProvider, val adapter: PagerAdapter) : AsyncTask<Void, Void, List<RouterDevice>>() {
+        override fun doInBackground(vararg params: Void?): List<RouterDevice> {
             return devicesOnRouterProvider.getDevicesOnRouter()
         }
 
-        override fun onPostExecute(connectedDevices: List<String>) {
+        override fun onPostExecute(connectedDevices: List<RouterDevice>) {
             Timber.v("Finished getting devices")
             adapter.setConnectedDevices(connectedDevices)
         }
@@ -67,15 +69,17 @@ class DevicesActivity : FragmentActivity() {
         val savedDevices: Devices
     ) : FragmentPagerAdapter(fm) {
 
-        private val visitorDevicesList: MutableList<String>
-        private val homeDevicesList: MutableList<String>
+        private val visitorDevicesList: MutableList<Device>
+        private val homeDevicesList: MutableList<Device>
         private val unclassifiedDevicesFragment: DevicesFragment
         private val visitorDevicesFragment: DevicesFragment
         private val homeDevicesFragment: DevicesFragment
 
         init {
-            visitorDevicesList = savedDevices.visitorDevices.toMutableList()
-            homeDevicesList = savedDevices.homeDevices.toMutableList()
+            visitorDevicesList =
+                savedDevices.visitorDevices.map { Device(macAddress = it, hostName = null) }.toMutableList()
+            homeDevicesList =
+                savedDevices.homeDevices.map { Device(macAddress = it, hostName = null) }.toMutableList()
             unclassifiedDevicesFragment = DevicesFragment(eventBus, mutableListOf())
             visitorDevicesFragment = DevicesFragment(eventBus, visitorDevicesList)
             homeDevicesFragment = DevicesFragment(eventBus, homeDevicesList)
@@ -116,15 +120,23 @@ class DevicesActivity : FragmentActivity() {
             save()
         }
 
-        public fun setConnectedDevices(connectedDevices: List<String>) {
+        public fun setConnectedDevices(connectedDevices: List<RouterDevice>) {
+            val connectedDevicesByMacAddress = connectedDevices.associateBy { it.macAddress }
+            val homeMacAddresses = homeDevicesList.map { it.macAddress }.toSet()
+            val visitorMacAddresses = visitorDevicesList.map { it.macAddress }.toSet()
             val unclassifiedDevices =
-                (connectedDevices.toSet() - homeDevicesList.toSet() - visitorDevicesList.toSet()).toMutableList()
+                (connectedDevicesByMacAddress.keys - homeMacAddresses - visitorMacAddresses)
+                    .map { connectedDevicesByMacAddress[it]!! }
+                    .toMutableList()
             unclassifiedDevicesFragment.setDevices(unclassifiedDevices)
         }
 
         private fun save() {
             devicePersistence.saveDevices(
-                Devices(visitorDevices = visitorDevicesList, homeDevices = homeDevicesList)
+                Devices(
+                    visitorDevices = visitorDevicesList.map { it.macAddress },
+                    homeDevices = homeDevicesList.map { it.macAddress }
+                )
             )
         }
     }
