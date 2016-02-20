@@ -1,5 +1,5 @@
 package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 
-public interface DevicesOnRouterProvider {
+interface DevicesOnRouterProvider {
     fun getDevicesOnRouter(): List<RouterDevice>
 }

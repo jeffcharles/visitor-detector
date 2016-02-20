@@ -17,7 +17,7 @@ class AlarmSchedulingHelper @Inject constructor(
     val alarmManager: AlarmManager,
     @Named("applicationContext") val applicationContext: Context
 ) {
-    public fun setupAlarm() {
+    fun setupAlarm() {
         val intent = Intent(applicationContext, AlarmReceiver::class.java)
         val pendingIntent =
             PendingIntent.getBroadcast(applicationContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)

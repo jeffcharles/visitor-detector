@@ -2,8 +2,6 @@ package com.beyondtechnicallycorrect.visitordetector.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.support.annotation.IdRes
-import android.support.annotation.LayoutRes
 import android.support.annotation.NonNull
 import android.support.v4.app.ListFragment
 import android.view.*
@@ -20,7 +18,7 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) 
 
     private var deviceArrayAdapter: Adapter? = null
 
-    public fun addDevices(devicesToAdd: Collection<Device>) {
+    fun addDevices(devicesToAdd: Collection<Device>) {
         if (deviceArrayAdapter != null) {
             deviceArrayAdapter?.addAll(devicesToAdd)
         } else {
@@ -87,7 +85,7 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) 
         }
     }
 
-    public fun setDevices(devices: List<RouterDevice>) {
+    fun setDevices(devices: List<RouterDevice>) {
         val transformedDevices =
             devices.map { Device(macAddress = it.macAddress, hostName = it.hostName) }
         if (deviceArrayAdapter != null) {

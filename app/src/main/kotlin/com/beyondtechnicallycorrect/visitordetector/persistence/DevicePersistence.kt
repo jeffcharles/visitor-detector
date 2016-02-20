@@ -9,7 +9,7 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
-public class DevicePersistence @Inject constructor(
+class DevicePersistence @Inject constructor(
     @Named("applicationContext") val applicationContext: Context,
     val gson: Gson
 ) {
