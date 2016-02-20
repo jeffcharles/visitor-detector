@@ -20,6 +20,7 @@ import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
 import com.beyondtechnicallycorrect.visitordetector.models.Device
 import com.beyondtechnicallycorrect.visitordetector.persistence.DevicePersistence
 import com.beyondtechnicallycorrect.visitordetector.persistence.Devices
+import com.beyondtechnicallycorrect.visitordetector.persistence.SavedDevice
 import de.greenrobot.event.EventBus
 import timber.log.Timber
 import javax.inject.Inject
@@ -77,9 +78,9 @@ class DevicesActivity : FragmentActivity() {
 
         init {
             visitorDevicesList =
-                savedDevices.visitorDevices.map { Device(macAddress = it, hostName = null) }.toMutableList()
+                savedDevices.visitorDevices.map { Device(macAddress = it.macAddress, hostName = null) }.toMutableList()
             homeDevicesList =
-                savedDevices.homeDevices.map { Device(macAddress = it, hostName = null) }.toMutableList()
+                savedDevices.homeDevices.map { Device(macAddress = it.macAddress, hostName = null) }.toMutableList()
             unclassifiedDevicesFragment = DevicesFragment(eventBus, mutableListOf())
             visitorDevicesFragment = DevicesFragment(eventBus, visitorDevicesList)
             homeDevicesFragment = DevicesFragment(eventBus, homeDevicesList)
@@ -134,8 +135,8 @@ class DevicesActivity : FragmentActivity() {
         private fun save() {
             devicePersistence.saveDevices(
                 Devices(
-                    visitorDevices = visitorDevicesList.map { it.macAddress },
-                    homeDevices = homeDevicesList.map { it.macAddress }
+                    visitorDevices = visitorDevicesList.map { SavedDevice(macAddress = it.macAddress) },
+                    homeDevices = homeDevicesList.map { SavedDevice(macAddress = it.macAddress) }
                 )
             )
         }
