@@ -2,6 +2,9 @@ package com.beyondtechnicallycorrect.visitordetector.fragments
 
 import android.content.Context
 import android.os.Bundle
+import android.support.annotation.IdRes
+import android.support.annotation.LayoutRes
+import android.support.annotation.NonNull
 import android.support.v4.app.ListFragment
 import android.view.*
 import android.widget.*
@@ -15,7 +18,7 @@ import timber.log.Timber
 
 class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) : ListFragment() {
 
-    private var deviceArrayAdapter: ArrayAdapter<Device>? = null
+    private var deviceArrayAdapter: Adapter? = null
 
     public fun addDevices(devicesToAdd: Collection<Device>) {
         if (deviceArrayAdapter != null) {
@@ -28,8 +31,7 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         Timber.v("Attached Timber")
-        deviceArrayAdapter =
-            ArrayAdapter(this.context, R.layout.device_list_item, R.id.device, devices)
+        deviceArrayAdapter = Adapter(this.context, devices)
         this.listAdapter = deviceArrayAdapter
     }
 
@@ -64,6 +66,10 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) 
             }
 
             override fun onItemCheckedStateChanged(mode: ActionMode?, position: Int, id: Long, checked: Boolean) {
+                when (checked) {
+                    true -> deviceArrayAdapter!!.selectDevice(deviceArrayAdapter!!.getItem(position))
+                    false -> deviceArrayAdapter!!.deselectDevice(deviceArrayAdapter!!.getItem(position))
+                }
                 setIsChecked(position - listView.firstVisiblePosition, checked)
             }
 
@@ -112,5 +118,28 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) 
         val devicesToMove = checkedIndexes.mapNotNull { deviceArrayAdapter?.getItem(it) }
         devicesToMove.forEach { deviceArrayAdapter?.remove(it) }
         postEvent(devicesToMove)
+    }
+
+    private class Adapter(
+        context: Context,
+        @NonNull objects: MutableList<Device>
+    ) : ArrayAdapter<Device>(context, R.layout.device_list_item, R.id.device, objects) {
+
+        private val selectedDevices: MutableSet<Device> = hashSetOf()
+
+        fun selectDevice(device: Device) {
+            selectedDevices.add(device)
+        }
+
+        fun deselectDevice(device: Device) {
+            selectedDevices.remove(device)
+        }
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val view = super.getView(position, convertView, parent)
+            (view.findViewById(R.id.device_checkbox) as CheckBox).isChecked =
+                selectedDevices.contains(this.getItem(position))
+            return view
+        }
     }
 }
