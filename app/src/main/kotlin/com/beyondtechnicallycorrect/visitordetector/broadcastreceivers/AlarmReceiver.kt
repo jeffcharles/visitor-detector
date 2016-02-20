@@ -41,8 +41,8 @@ class AlarmReceiver : BroadcastReceiver() {
 
         override fun onPostExecute(connectedDevices: List<RouterDevice>) {
             val savedDevices = devicePersistence.getSavedDevices()
-            val nonHomeDevices =
-                connectedDevices.map { it.macAddress }.toSet() - savedDevices.homeDevices.toSet()
+            val nonHomeDevices : Set<String> =
+                connectedDevices.map { it.macAddress }.toSet() - savedDevices.homeDevices.map { it.macAddress }.toSet()
             if (nonHomeDevices.any()) {
                 Timber.d("At least one non-home device")
                 val notification = NotificationCompat.Builder(context)
