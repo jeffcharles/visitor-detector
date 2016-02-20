@@ -15,11 +15,11 @@ import com.beyondtechnicallycorrect.visitordetector.persistence.DevicePersistenc
 import timber.log.Timber
 import javax.inject.Inject
 
-public class AlarmReceiver : BroadcastReceiver() {
+class AlarmReceiver : BroadcastReceiver() {
 
-    @Inject public lateinit var alarmSchedulingHelper: AlarmSchedulingHelper
-    @Inject public lateinit var devicesOnRouterProvider: DevicesOnRouterProvider
-    @Inject public lateinit var devicePersistence: DevicePersistence
+    @Inject lateinit var alarmSchedulingHelper: AlarmSchedulingHelper
+    @Inject lateinit var devicesOnRouterProvider: DevicesOnRouterProvider
+    @Inject lateinit var devicePersistence: DevicePersistence
 
     override fun onReceive(context: Context, intent: Intent) {
         Timber.v("Starting onReceive")

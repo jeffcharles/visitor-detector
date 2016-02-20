@@ -110,18 +110,18 @@ class DevicesActivity : FragmentActivity() {
         }
 
         // used by EventBus
-        public fun onEvent(event: DevicesMovedToHomeList) {
+        fun onEvent(event: DevicesMovedToHomeList) {
             homeDevicesFragment.addDevices(event.devices)
             save()
         }
 
         // used by EventBus
-        public fun onEvent(event: DevicesMovedToVisitorList) {
+        fun onEvent(event: DevicesMovedToVisitorList) {
             visitorDevicesFragment.addDevices(event.devices)
             save()
         }
 
-        public fun setConnectedDevices(connectedDevices: List<RouterDevice>) {
+        fun setConnectedDevices(connectedDevices: List<RouterDevice>) {
             val connectedDevicesByMacAddress = connectedDevices.associateBy { it.macAddress }
             val homeMacAddresses = homeDevicesList.map { it.macAddress }.toSet()
             val visitorMacAddresses = visitorDevicesList.map { it.macAddress }.toSet()

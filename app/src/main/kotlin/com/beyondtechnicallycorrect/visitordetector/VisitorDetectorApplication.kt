@@ -16,7 +16,7 @@ class VisitorDetectorApplication : Application() {
         }
     }
 
-    public fun getApplicationComponent(): ApplicationComponent {
+    fun getApplicationComponent(): ApplicationComponent {
         return applicationComponent
     }
 }

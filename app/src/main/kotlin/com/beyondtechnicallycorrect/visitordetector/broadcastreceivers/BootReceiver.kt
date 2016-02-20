@@ -8,9 +8,9 @@ import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import timber.log.Timber
 import javax.inject.Inject
 
-public class BootReceiver : BroadcastReceiver() {
+class BootReceiver : BroadcastReceiver() {
 
-    @Inject public lateinit var alarmSchedulingHelper: AlarmSchedulingHelper
+    @Inject lateinit var alarmSchedulingHelper: AlarmSchedulingHelper
 
     override fun onReceive(context: Context, intent: Intent) {
         Timber.v("Starting onReceive")
