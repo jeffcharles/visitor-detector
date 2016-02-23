@@ -1,9 +1,8 @@
 package com.beyondtechnicallycorrect.visitordetector.broadcastreceivers
 
-import com.beyondtechnicallycorrect.visitordetector.broadcastreceivers.implementations.ImplementationsModule
 import dagger.Module
 
 @Module(
-    includes = arrayOf(ImplementationsModule::class)
+    includes = arrayOf(AlarmReceiver.AlarmReceiverModule::class)
 )
 class BroadcastReceiversModule
