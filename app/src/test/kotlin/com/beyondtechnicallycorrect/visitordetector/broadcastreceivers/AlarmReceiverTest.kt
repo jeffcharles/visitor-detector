@@ -1,4 +1,4 @@
-package com.beyondtechnicallycorrect.visitordetector.broadcastreceivers.implementations
+package com.beyondtechnicallycorrect.visitordetector.broadcastreceivers
 
 import android.app.NotificationManager
 import android.content.Context
@@ -11,7 +11,7 @@ import com.beyondtechnicallycorrect.visitordetector.persistence.SavedDevice
 import org.junit.Test
 import org.mockito.Mockito.*
 
-class AlarmReceiverImplTest {
+class AlarmReceiverTest {
 
     @Test
     fun start_shouldScheduleNextAlarm() {
@@ -19,8 +19,8 @@ class AlarmReceiverImplTest {
         val devicesOnRouterProvider = mock(DevicesOnRouterProvider::class.java)
         val devicePersistence = mock(DevicePersistence::class.java)
         val notificationManager = mock(NotificationManager::class.java)
-        val notificationHelper = mock(NotificationHelper::class.java)
-        val alarmReceiverImpl = AlarmReceiverImpl(
+        val notificationHelper = mock(AlarmReceiver.NotificationHelper::class.java)
+        val runner = AlarmReceiver.Runner(
             alarmSchedulingHelper,
             devicesOnRouterProvider,
             devicePersistence,
@@ -28,7 +28,7 @@ class AlarmReceiverImplTest {
             notificationHelper
         )
 
-        alarmReceiverImpl.start()
+        runner.start()
 
         verify(alarmSchedulingHelper).setupAlarm()
     }
@@ -36,11 +36,10 @@ class AlarmReceiverImplTest {
     @Test
     fun withResults_shouldNotifyIfAnyUnclassifiedDevices() {
         val notificationManager = mock(NotificationManager::class.java)
-        val alarmReceiverImpl =
-            createAlarmReceiverImpl(notificationManager, Devices(listOf(), listOf()))
+        val runner = createAlarmReceiverRunner(notificationManager, Devices(listOf(), listOf()))
 
         val context = mock(Context::class.java)
-        alarmReceiverImpl.withResults(
+        runner.withResults(
             connectedDevices = listOf(RouterDevice(macAddress = "123456", hostName = "")),
             context = context
         )
@@ -51,7 +50,7 @@ class AlarmReceiverImplTest {
     @Test
     fun withResults_shouldNotifyIfAnyVisitorDevices() {
         val notificationManager = mock(NotificationManager::class.java)
-        val alarmReceiverImpl = createAlarmReceiverImpl(
+        val runner = createAlarmReceiverRunner(
             notificationManager,
             Devices(
                 homeDevices = listOf(),
@@ -60,7 +59,7 @@ class AlarmReceiverImplTest {
         )
 
         val context = mock(Context::class.java)
-        alarmReceiverImpl.withResults(
+        runner.withResults(
             connectedDevices = listOf(RouterDevice(macAddress = "123456", hostName = "")),
             context = context
         )
@@ -71,7 +70,7 @@ class AlarmReceiverImplTest {
     @Test
     fun withResults_shouldNotNotifyIfAllHomeDevices() {
         val notificationManager = mock(NotificationManager::class.java)
-        val alarmReceiverImpl = createAlarmReceiverImpl(
+        val runner = createAlarmReceiverRunner(
             notificationManager,
             Devices(
                 homeDevices = listOf(SavedDevice(macAddress = "123456")),
@@ -80,7 +79,7 @@ class AlarmReceiverImplTest {
         )
 
         val context = mock(Context::class.java)
-        alarmReceiverImpl.withResults(
+        runner.withResults(
             connectedDevices = listOf(RouterDevice(macAddress = "123456", hostName = "")),
             context = context
         )
@@ -88,16 +87,16 @@ class AlarmReceiverImplTest {
         verify(notificationManager, never()).notify(anyInt(), anyObject())
     }
 
-    private fun createAlarmReceiverImpl(
+    private fun createAlarmReceiverRunner(
         notificationManager: NotificationManager,
         savedDevices: Devices
-    ): AlarmReceiverImpl {
+    ): AlarmReceiver.Runner {
         val alarmSchedulingHelper = mock(AlarmSchedulingHelper::class.java)
         val devicesOnRouterProvider = mock(DevicesOnRouterProvider::class.java)
         val devicePersistence = mock(DevicePersistence::class.java)
         `when`(devicePersistence.getSavedDevices()).thenReturn(savedDevices)
-        val notificationHelper = mock(NotificationHelper::class.java)
-        return AlarmReceiverImpl(
+        val notificationHelper = mock(AlarmReceiver.NotificationHelper::class.java)
+        return AlarmReceiver.Runner(
             alarmSchedulingHelper,
             devicesOnRouterProvider,
             devicePersistence,
