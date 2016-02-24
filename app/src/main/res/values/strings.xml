@@ -9,4 +9,6 @@
     <string name="device_menu_move_to_home">Move to home</string>
     <string name="visitor_detected_notification_title">Visitor Detected</string>
     <string name="visitor_detected_notification_text">A non-home device has been detected on the network</string>
+    <string name="error_fetching_devices">There was an issue fetching devices</string>
+    <string name="error_fetching_devices_notification_title">Error detecting visitors</string>
 </resources>

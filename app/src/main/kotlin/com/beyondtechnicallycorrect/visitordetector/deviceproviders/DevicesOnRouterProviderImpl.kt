@@ -2,6 +2,7 @@ package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 
 import android.net.wifi.WifiManager
 import com.beyondtechnicallycorrect.visitordetector.BuildConfig
+import org.funktionale.either.Either
 import timber.log.Timber
 import java.util.*
 import javax.inject.Inject
@@ -10,7 +11,7 @@ class DevicesOnRouterProviderImpl @Inject constructor(
     val routerApi: RouterApi,
     val wifiManager: WifiManager
 ) : DevicesOnRouterProvider {
-    override fun getDevicesOnRouter(): List<RouterDevice> {
+    override fun getDevicesOnRouter(): Either<DeviceFetchingFailure, List<RouterDevice>> {
         val onHomeWifi =
             BuildConfig.DEBUG ||
             BuildConfig.WIFI_SSIDS
@@ -19,7 +20,7 @@ class DevicesOnRouterProviderImpl @Inject constructor(
                 .contains(wifiManager.connectionInfo.ssid)
         if (!onHomeWifi) {
             Timber.d("Not on home network")
-            return listOf()
+            return Either.Right(listOf<RouterDevice>())
         }
 
         val loginCall =
@@ -35,7 +36,8 @@ class DevicesOnRouterProviderImpl @Inject constructor(
         val loginResponseBody = loginResponse.body()
         val auth = loginResponseBody.result
         if (auth == null) {
-            throw RuntimeException("Got a null auth result")
+            Timber.w("Authentication call didn't return result")
+            return Either.Left(DeviceFetchingFailure.Error)
         }
 
         val macAddressCall =
@@ -52,9 +54,12 @@ class DevicesOnRouterProviderImpl @Inject constructor(
         val macAddressBody = macAddressResponse.body()
         val macAddressHints = macAddressBody.result
         if (macAddressHints == null) {
-            throw RuntimeException("Got a null result for mac_hints")
+            Timber.w("mac_hints didn't return result")
+            return Either.Left(DeviceFetchingFailure.Error)
         }
 
-        return macAddressHints.map { RouterDevice(macAddress = it[0], hostName = it[1]) }
+        return Either.Right(
+            macAddressHints.map { RouterDevice(macAddress = it[0], hostName = it[1]) }
+        )
     }
 }
