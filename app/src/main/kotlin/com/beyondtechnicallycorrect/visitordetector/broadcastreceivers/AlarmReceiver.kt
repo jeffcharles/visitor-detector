@@ -10,11 +10,13 @@ import android.support.v7.app.NotificationCompat
 import com.beyondtechnicallycorrect.visitordetector.AlarmSchedulingHelper
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
+import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DeviceFetchingFailure
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
 import com.beyondtechnicallycorrect.visitordetector.persistence.DevicePersistence
 import dagger.Module
 import dagger.Provides
+import org.funktionale.either.Either
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,13 +36,17 @@ class AlarmReceiver : BroadcastReceiver() {
     private class GetConnectedDevicesTask(
         val context: Context,
         val runner: Runner
-    ) : AsyncTask<Void, Void, List<RouterDevice>>() {
+    ) : AsyncTask<Void, Void, Either<DeviceFetchingFailure, List<RouterDevice>>>() {
 
-        override fun doInBackground(vararg params: Void?): List<RouterDevice> {
+        override fun doInBackground(
+            vararg params: Void?
+        ): Either<DeviceFetchingFailure, List<RouterDevice>> {
             return runner.inBackground()
         }
 
-        override fun onPostExecute(connectedDevices: List<RouterDevice>) {
+        override fun onPostExecute(
+            connectedDevices: Either<DeviceFetchingFailure, List<RouterDevice>>
+        ) {
             runner.withResults(connectedDevices, context)
         }
     }
@@ -56,31 +62,49 @@ class AlarmReceiver : BroadcastReceiver() {
             alarmSchedulingHelper.setupAlarm()
         }
 
-        fun inBackground(): List<RouterDevice> {
+        fun inBackground(): Either<DeviceFetchingFailure, List<RouterDevice>> {
             return devicesOnRouterProvider.getDevicesOnRouter()
         }
 
-        fun withResults(connectedDevices: List<RouterDevice>, context: Context) {
-            val savedDevices = devicePersistence.getSavedDevices()
-            val nonHomeDevices : Set<String> =
-                connectedDevices.map { it.macAddress }.toSet() - savedDevices.homeDevices.map { it.macAddress }.toSet()
-            if (nonHomeDevices.any()) {
-                Timber.d("At least one non-home device")
-                val notification = notificationHelper.create(context)
+        fun withResults(
+            connectedDevices: Either<DeviceFetchingFailure, List<RouterDevice>>, context: Context
+        ) {
+            if (connectedDevices.isLeft()) {
+                val notification = notificationHelper.createError(context)
                 val NOTIFICATION_ID = 1
                 notificationManager.notify(NOTIFICATION_ID, notification)
-                return;
+                return
             }
-            Timber.d("No non-home devices")
+            val savedDevices = devicePersistence.getSavedDevices()
+            val nonHomeDevices : Set<String> =
+                connectedDevices.right().get().map { it.macAddress }.toSet() - savedDevices.homeDevices.map { it.macAddress }.toSet()
+            if (!nonHomeDevices.any()) {
+                Timber.d("No non-home devices")
+                return
+            }
+            Timber.d("At least one non-home device")
+            val notification = notificationHelper.createVisitorDetected(context)
+            val NOTIFICATION_ID = 1
+            notificationManager.notify(NOTIFICATION_ID, notification)
         }
     }
 
     interface NotificationHelper {
-        fun create(context: Context): Notification
+        fun createError(context: Context): Notification
+        fun createVisitorDetected(context: Context): Notification
     }
 
     class NotificationHelperImpl @Inject constructor() : NotificationHelper {
-        override fun create(context: Context): Notification {
+
+        override fun createError(context: Context): Notification {
+            return NotificationCompat.Builder(context)
+                .setSmallIcon(R.drawable.ic_error_white_24dp)
+                .setContentTitle(context.getString(R.string.error_fetching_devices_notification_title))
+                .setContentText(context.getString(R.string.error_fetching_devices))
+                .build()
+        }
+
+        override fun createVisitorDetected(context: Context): Notification {
             return NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.ic_person_white_24dp)
                 .setContentTitle(context.getString(R.string.visitor_detected_notification_title))

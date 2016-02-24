@@ -9,9 +9,11 @@ import android.support.v4.app.FragmentActivity
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
+import android.widget.Toast
 import com.beyondtechnicallycorrect.visitordetector.AlarmSchedulingHelper
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
+import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DeviceFetchingFailure
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
@@ -22,6 +24,7 @@ import com.beyondtechnicallycorrect.visitordetector.persistence.DevicePersistenc
 import com.beyondtechnicallycorrect.visitordetector.persistence.Devices
 import com.beyondtechnicallycorrect.visitordetector.persistence.SavedDevice
 import de.greenrobot.event.EventBus
+import org.funktionale.either.Either
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -48,17 +51,29 @@ class DevicesActivity : FragmentActivity() {
         val tabLayout = this.findViewById(R.id.tabs) as TabLayout
         tabLayout.setupWithViewPager(pager)
 
-        GetDevicesTask(devicesOnRouterProvider, adapter).execute()
+        GetDevicesTask(this, devicesOnRouterProvider, adapter).execute()
     }
 
-    private class GetDevicesTask(val devicesOnRouterProvider: DevicesOnRouterProvider, val adapter: PagerAdapter) : AsyncTask<Void, Void, List<RouterDevice>>() {
-        override fun doInBackground(vararg params: Void?): List<RouterDevice> {
+    private class GetDevicesTask(
+        val context: Context,
+        val devicesOnRouterProvider: DevicesOnRouterProvider,
+        val adapter: PagerAdapter
+    ) : AsyncTask<Void, Void, Either<DeviceFetchingFailure, List<RouterDevice>>>() {
+
+        override fun doInBackground(
+            vararg params: Void?
+        ): Either<DeviceFetchingFailure, List<RouterDevice>> {
             return devicesOnRouterProvider.getDevicesOnRouter()
         }
 
-        override fun onPostExecute(connectedDevices: List<RouterDevice>) {
+        override fun onPostExecute(
+            connectedDevices: Either<DeviceFetchingFailure, List<RouterDevice>>
+        ) {
             Timber.v("Finished getting devices")
-            adapter.setConnectedDevices(connectedDevices)
+            when (connectedDevices) {
+                is Either.Left -> Toast.makeText(context, R.string.error_fetching_devices, Toast.LENGTH_LONG).show()
+                is Either.Right -> adapter.setConnectedDevices(connectedDevices.right().get())
+            }
         }
     }
 
