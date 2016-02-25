@@ -25,6 +25,22 @@ class DevicesOnRouterProviderImpl @Inject constructor(
             return Either.Right(listOf<RouterDevice>())
         }
 
+        val auth = login()
+        if (auth.isLeft()) {
+            return Either.Left(auth.left().get())
+        }
+
+        val macAddressHints = getMacAddresses(auth.right().get())
+        if (macAddressHints.isLeft()) {
+            return Either.Left(macAddressHints.left().get())
+        }
+
+        return Either.Right(
+            macAddressHints.right().get().map { RouterDevice(macAddress = it[0], hostName = it[1]) }
+        )
+    }
+
+    private fun login(): Either<DeviceFetchingFailure, String> {
         val loginCall =
             routerApi.login(
                 loginBody = JsonRpcRequest(
@@ -51,7 +67,10 @@ class DevicesOnRouterProviderImpl @Inject constructor(
             Timber.w("Authentication call didn't return result")
             return Either.Left(DeviceFetchingFailure.Error)
         }
+        return Either.Right(auth)
+    }
 
+    private fun getMacAddresses(auth: String): Either<DeviceFetchingFailure, Array<Array<String>>> {
         val macAddressCall =
             routerApi.sys(
                 body = JsonRpcRequest(
@@ -79,9 +98,6 @@ class DevicesOnRouterProviderImpl @Inject constructor(
             Timber.w("mac_hints didn't return result")
             return Either.Left(DeviceFetchingFailure.Error)
         }
-
-        return Either.Right(
-            macAddressHints.map { RouterDevice(macAddress = it[0], hostName = it[1]) }
-        )
+        return Either.Right(macAddressHints)
     }
 }
