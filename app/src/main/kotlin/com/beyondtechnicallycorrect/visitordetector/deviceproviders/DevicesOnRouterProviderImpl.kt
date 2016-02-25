@@ -3,7 +3,9 @@ package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 import android.net.wifi.WifiManager
 import com.beyondtechnicallycorrect.visitordetector.BuildConfig
 import org.funktionale.either.Either
+import retrofit.Response
 import timber.log.Timber
+import java.io.IOException
 import java.util.*
 import javax.inject.Inject
 
@@ -32,7 +34,17 @@ class DevicesOnRouterProviderImpl @Inject constructor(
                     params = arrayOf(BuildConfig.ROUTER_USERNAME, BuildConfig.ROUTER_PASSWORD)
                 )
             )
-        val loginResponse = loginCall.execute()
+        val loginResponse: Response<JsonRpcResponse<String>>
+        try {
+            loginResponse = loginCall.execute()
+        } catch (e: IOException) {
+            Timber.w(e, "IOException while logging in")
+            return Either.Left(DeviceFetchingFailure.Error)
+        }
+        if (!loginResponse.isSuccess) {
+            Timber.w("Got status code of %d while logging in", loginResponse.code())
+            return Either.Left(DeviceFetchingFailure.Error)
+        }
         val loginResponseBody = loginResponse.body()
         val auth = loginResponseBody.result
         if (auth == null) {
@@ -50,7 +62,17 @@ class DevicesOnRouterProviderImpl @Inject constructor(
                 ),
                 auth = auth
             )
-        val macAddressResponse = macAddressCall.execute()
+        val macAddressResponse: Response<JsonRpcResponse<Array<Array<String>>>>
+        try {
+            macAddressResponse = macAddressCall.execute()
+        } catch (e: IOException) {
+            Timber.w(e, "IOException while getting mac addresses")
+            return Either.Left(DeviceFetchingFailure.Error)
+        }
+        if (!macAddressResponse.isSuccess) {
+            Timber.w("Got status code of %d while getting mac addresses", macAddressResponse.code())
+            return Either.Left(DeviceFetchingFailure.Error)
+        }
         val macAddressBody = macAddressResponse.body()
         val macAddressHints = macAddressBody.result
         if (macAddressHints == null) {
