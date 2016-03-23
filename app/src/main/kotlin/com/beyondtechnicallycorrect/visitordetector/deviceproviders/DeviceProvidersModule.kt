@@ -6,7 +6,7 @@ import dagger.Provides
 import retrofit.GsonConverterFactory
 import retrofit.Retrofit
 
-@Module
+@Module(includes = arrayOf(DevicesOnRouterProviderImpl.DevicesOnRouterProviderImplModule::class))
 class DeviceProvidersModule {
     @Provides fun provideDevicesOnRouterProvider(provider: DevicesOnRouterProviderImpl): DevicesOnRouterProvider {
         return provider;
