@@ -2,25 +2,22 @@ package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 
 import android.net.wifi.WifiManager
 import com.beyondtechnicallycorrect.visitordetector.BuildConfig
+import dagger.Module
+import dagger.Provides
 import org.funktionale.either.Either
 import retrofit.Response
 import timber.log.Timber
 import java.io.IOException
 import java.util.*
 import javax.inject.Inject
+import javax.inject.Singleton
 
 class DevicesOnRouterProviderImpl @Inject constructor(
-    val routerApi: RouterApi,
-    val wifiManager: WifiManager
+    private val routerApi: RouterApi,
+    private val onHomeWifi: OnHomeWifi
 ) : DevicesOnRouterProvider {
     override fun getDevicesOnRouter(): Either<DeviceFetchingFailure, List<RouterDevice>> {
-        val onHomeWifi =
-            BuildConfig.DEBUG ||
-            BuildConfig.WIFI_SSIDS
-                .split(',')
-                .map { "\"$it\"" }
-                .contains(wifiManager.connectionInfo.ssid)
-        if (!onHomeWifi) {
+        if (!onHomeWifi.isOnHomeWifi()) {
             Timber.d("Not on home network")
             return Either.Right(listOf<RouterDevice>())
         }
@@ -99,5 +96,26 @@ class DevicesOnRouterProviderImpl @Inject constructor(
             return Either.Left(DeviceFetchingFailure.Error)
         }
         return Either.Right(macAddressHints)
+    }
+
+    interface OnHomeWifi {
+        fun isOnHomeWifi(): Boolean
+    }
+
+    class OnHomeWifiImpl @Inject constructor(private val wifiManager: WifiManager) : OnHomeWifi {
+        override fun isOnHomeWifi(): Boolean {
+            return BuildConfig.DEBUG ||
+                BuildConfig.WIFI_SSIDS
+                    .split(',')
+                    .map { "\"$it\"" }
+                    .contains(wifiManager.connectionInfo.ssid)
+        }
+    }
+
+    @Module
+    class DevicesOnRouterProviderImplModule() {
+        @Provides @Singleton fun provideOnHomeWifi(onHomeWifiImpl: OnHomeWifiImpl): OnHomeWifi {
+            return onHomeWifiImpl
+        }
     }
 }
