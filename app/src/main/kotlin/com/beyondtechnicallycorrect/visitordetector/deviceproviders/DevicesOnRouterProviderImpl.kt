@@ -2,6 +2,8 @@ package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 
 import android.net.wifi.WifiManager
 import com.beyondtechnicallycorrect.visitordetector.BuildConfig
+import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettings
+import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettingsGetter
 import dagger.Module
 import dagger.Provides
 import org.funktionale.either.Either
@@ -13,21 +15,31 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 class DevicesOnRouterProviderImpl @Inject constructor(
-    private val routerApi: RouterApi,
-    private val onHomeWifi: OnHomeWifi
+    private val routerSettingsGetter: RouterSettingsGetter,
+    private val routerApiFactory: RouterApiFactory,
+    private val onHomeWifi: DevicesOnRouterProvider.OnHomeWifi
 ) : DevicesOnRouterProvider {
+
     override fun getDevicesOnRouter(): Either<DeviceFetchingFailure, List<RouterDevice>> {
-        if (!onHomeWifi.isOnHomeWifi()) {
+        return getDevicesOnRouter(routerSettingsGetter.getRouterSettings())
+    }
+
+    override fun getDevicesOnRouter(
+        routerSettings: RouterSettings
+    ): Either<DeviceFetchingFailure, List<RouterDevice>> {
+        if (!onHomeWifi.isOnHomeWifi(routerSettings.homeNetworkSsids)) {
             Timber.d("Not on home network")
             return Either.Right(listOf<RouterDevice>())
         }
 
-        val auth = login()
+        val routerApi = routerApiFactory.createRouterApi(routerSettings.routerIpAddress)
+
+        val auth = login(routerApi, routerSettings.routerUsername, routerSettings.routerPassword)
         if (auth.isLeft()) {
             return Either.Left(auth.left().get())
         }
 
-        val macAddressHints = getMacAddresses(auth.right().get())
+        val macAddressHints = getMacAddresses(routerApi, auth.right().get())
         if (macAddressHints.isLeft()) {
             return Either.Left(macAddressHints.left().get())
         }
@@ -37,14 +49,18 @@ class DevicesOnRouterProviderImpl @Inject constructor(
         )
     }
 
-    private fun login(): Either<DeviceFetchingFailure, String> {
+    private fun login(
+        routerApi: RouterApi,
+        routerUsername: String,
+        routerPassword: String
+    ): Either<DeviceFetchingFailure, String> {
         val loginCall =
             routerApi.login(
                 loginBody = JsonRpcRequest(
                     jsonrpc = "2.0",
                     id = UUID.randomUUID().toString(),
                     method = "login",
-                    params = arrayOf(BuildConfig.ROUTER_USERNAME, BuildConfig.ROUTER_PASSWORD)
+                    params = arrayOf(routerUsername, routerPassword)
                 )
             )
         val loginResponse: Response<JsonRpcResponse<String>>
@@ -67,7 +83,10 @@ class DevicesOnRouterProviderImpl @Inject constructor(
         return Either.Right(auth)
     }
 
-    private fun getMacAddresses(auth: String): Either<DeviceFetchingFailure, Array<Array<String>>> {
+    private fun getMacAddresses(
+        routerApi: RouterApi,
+        auth: String
+    ): Either<DeviceFetchingFailure, Array<Array<String>>> {
         val macAddressCall =
             routerApi.sys(
                 body = JsonRpcRequest(
@@ -98,15 +117,12 @@ class DevicesOnRouterProviderImpl @Inject constructor(
         return Either.Right(macAddressHints)
     }
 
-    interface OnHomeWifi {
-        fun isOnHomeWifi(): Boolean
-    }
-
-    class OnHomeWifiImpl @Inject constructor(private val wifiManager: WifiManager) : OnHomeWifi {
-        override fun isOnHomeWifi(): Boolean {
+    class OnHomeWifiImpl @Inject constructor(
+        private val wifiManager: WifiManager
+    ) : DevicesOnRouterProvider.OnHomeWifi {
+        override fun isOnHomeWifi(homeSsids: List<String>): Boolean {
             return BuildConfig.DEBUG ||
-                BuildConfig.WIFI_SSIDS
-                    .split(',')
+                homeSsids
                     .map { "\"$it\"" }
                     .contains(wifiManager.connectionInfo.ssid)
         }
@@ -114,7 +130,9 @@ class DevicesOnRouterProviderImpl @Inject constructor(
 
     @Module
     class DevicesOnRouterProviderImplModule() {
-        @Provides @Singleton fun provideOnHomeWifi(onHomeWifiImpl: OnHomeWifiImpl): OnHomeWifi {
+        @Provides @Singleton fun provideOnHomeWifi(
+            onHomeWifiImpl: OnHomeWifiImpl
+        ): DevicesOnRouterProvider.OnHomeWifi {
             return onHomeWifiImpl
         }
     }

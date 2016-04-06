@@ -1,5 +1,7 @@
 package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 
+import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettings
+import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettingsGetter
 import okhttp3.MediaType
 import okhttp3.ResponseBody
 import org.assertj.core.api.Assertions.*
@@ -21,21 +23,28 @@ class DevicesOnRouterProviderImplTest {
                     JsonRpcResponse(arrayOf(arrayOf("foo", "bar"), arrayOf("baz", "corje")), null)
                 )
             )
-        val routerApi = createRouterApi(createSuccessfulLoginResponse(), sysResponse)
+        val routerApiFactory = createRouterApiFactory(createSuccessfulLoginResponse(), sysResponse)
 
-        val devicesOnRouterProvider = DevicesOnRouterProviderImpl(routerApi, createOnHomeWifi())
+        val devicesOnRouterProvider =
+            DevicesOnRouterProviderImpl(
+                createRouterSettingsGetter(),
+                routerApiFactory,
+                createOnHomeWifi()
+            )
 
-        assertThat(devicesOnRouterProvider.getDevicesOnRouter().right().get())
+        val connectedDevices = devicesOnRouterProvider.getDevicesOnRouter()
+        assertThat(connectedDevices.right().get())
             .containsExactly(RouterDevice("foo", "bar"), RouterDevice("baz", "corje"))
     }
 
     @Test
     fun givenNotOnHomeWifi_ShouldReturnNoConnectedDevices() {
-        val onHomeWifi = mock(DevicesOnRouterProviderImpl.OnHomeWifi::class.java)
-        `when`(onHomeWifi.isOnHomeWifi()).thenReturn(false);
+        val onHomeWifi = mock(DevicesOnRouterProvider.OnHomeWifi::class.java)
+        `when`(onHomeWifi.isOnHomeWifi(anyObject())).thenReturn(false);
 
         val devicesOnRouterProvider = DevicesOnRouterProviderImpl(
-            mock(RouterApi::class.java),
+            createRouterSettingsGetter(),
+            mock(RouterApiFactory::class.java),
             onHomeWifi
         )
         val connectedDevices = devicesOnRouterProvider.getDevicesOnRouter()
@@ -46,11 +55,17 @@ class DevicesOnRouterProviderImplTest {
     fun givenConnectionFailureDuringLogin_ShouldReturnLeft() {
         val loginResponse: Call<JsonRpcResponse<String>> = myMock()
         `when`(loginResponse.execute()).thenThrow(IOException())
-        val routerApi = createRouterApi(loginResponse, createSuccessfulSysResponse())
+        val routerApiFactory = createRouterApiFactory(loginResponse, createSuccessfulSysResponse())
 
-        val devicesOnRouterProvider = DevicesOnRouterProviderImpl(routerApi, createOnHomeWifi())
+        val devicesOnRouterProvider =
+            DevicesOnRouterProviderImpl(
+                createRouterSettingsGetter(),
+                routerApiFactory,
+                createOnHomeWifi()
+            )
 
-        assertThat(devicesOnRouterProvider.getDevicesOnRouter().isLeft()).isTrue()
+        val connectedDevices = devicesOnRouterProvider.getDevicesOnRouter()
+        assertThat(connectedDevices.isLeft()).isTrue()
     }
 
     @Test
@@ -58,11 +73,17 @@ class DevicesOnRouterProviderImplTest {
         val loginResponse: Call<JsonRpcResponse<String>> = myMock()
         `when`(loginResponse.execute())
             .thenReturn(Response.error(404, ResponseBody.create(MediaType.parse("text/plain"), "")))
-        val routerApi = createRouterApi(loginResponse, createSuccessfulSysResponse())
+        val routerApiFactory = createRouterApiFactory(loginResponse, createSuccessfulSysResponse())
 
-        val devicesOnRouterProvider = DevicesOnRouterProviderImpl(routerApi, createOnHomeWifi())
+        val devicesOnRouterProvider =
+            DevicesOnRouterProviderImpl(
+                createRouterSettingsGetter(),
+                routerApiFactory,
+                createOnHomeWifi()
+            )
 
-        assertThat(devicesOnRouterProvider.getDevicesOnRouter().isLeft()).isTrue()
+        val connectedDevices = devicesOnRouterProvider.getDevicesOnRouter()
+        assertThat(connectedDevices.isLeft()).isTrue()
     }
 
     @Test
@@ -71,22 +92,34 @@ class DevicesOnRouterProviderImplTest {
         // incorrect login credentials results in a 200 status code with a null result and null error
         `when`(loginResponse.execute())
             .thenReturn(Response.success(JsonRpcResponse<String>(null, null)))
-        val routerApi = createRouterApi(loginResponse, createSuccessfulSysResponse())
+        val routerApiFactory = createRouterApiFactory(loginResponse, createSuccessfulSysResponse())
 
-        val devicesOnRouterProvider = DevicesOnRouterProviderImpl(routerApi, createOnHomeWifi())
+        val devicesOnRouterProvider =
+            DevicesOnRouterProviderImpl(
+                createRouterSettingsGetter(),
+                routerApiFactory,
+                createOnHomeWifi()
+            )
 
-        assertThat(devicesOnRouterProvider.getDevicesOnRouter().isLeft()).isTrue()
+        val connectedDevices = devicesOnRouterProvider.getDevicesOnRouter()
+        assertThat(connectedDevices.isLeft()).isTrue()
     }
 
     @Test
     fun givenConnectionFailureWhileGettingMacAddresses_ShouldReturnLeft() {
         val sysResponse: Call<JsonRpcResponse<Array<Array<String>>>> = myMock()
         `when`(sysResponse.execute()).thenThrow(IOException())
-        val routerApi = createRouterApi(createSuccessfulLoginResponse(), sysResponse)
+        val routerApiFactory = createRouterApiFactory(createSuccessfulLoginResponse(), sysResponse)
 
-        val devicesOnRouterProvider = DevicesOnRouterProviderImpl(routerApi, createOnHomeWifi())
+        val devicesOnRouterProvider =
+            DevicesOnRouterProviderImpl(
+                createRouterSettingsGetter(),
+                routerApiFactory,
+                createOnHomeWifi()
+            )
 
-        assertThat(devicesOnRouterProvider.getDevicesOnRouter().isLeft()).isTrue()
+        val connectedDevices = devicesOnRouterProvider.getDevicesOnRouter()
+        assertThat(connectedDevices.isLeft()).isTrue()
     }
 
     @Test
@@ -94,27 +127,42 @@ class DevicesOnRouterProviderImplTest {
         val sysResponse: Call<JsonRpcResponse<Array<Array<String>>>> = myMock()
         `when`(sysResponse.execute())
             .thenReturn(Response.error(500, ResponseBody.create(MediaType.parse("text/plain"), "")))
-        val routerApi = createRouterApi(createSuccessfulLoginResponse(), sysResponse)
+        val routerApiFactory = createRouterApiFactory(createSuccessfulLoginResponse(), sysResponse)
 
-        val devicesOnRouterProvider = DevicesOnRouterProviderImpl(routerApi, createOnHomeWifi())
+        val devicesOnRouterProvider =
+            DevicesOnRouterProviderImpl(
+                createRouterSettingsGetter(),
+                routerApiFactory,
+                createOnHomeWifi()
+            )
 
-        assertThat(devicesOnRouterProvider.getDevicesOnRouter().isLeft()).isTrue()
+        val connectedDevices = devicesOnRouterProvider.getDevicesOnRouter()
+        assertThat(connectedDevices.isLeft()).isTrue()
     }
 
-    private fun createOnHomeWifi(): DevicesOnRouterProviderImpl.OnHomeWifi {
-        val onHomeWifi = mock(DevicesOnRouterProviderImpl.OnHomeWifi::class.java)
-        `when`(onHomeWifi.isOnHomeWifi()).thenReturn(true)
+    private fun createRouterSettingsGetter(): RouterSettingsGetter {
+        val routerSettingsGetter = mock(RouterSettingsGetter::class.java)
+        `when`(routerSettingsGetter.getRouterSettings())
+            .thenReturn(RouterSettings(listOf(), "", "", ""))
+        return routerSettingsGetter
+    }
+
+    private fun createOnHomeWifi(): DevicesOnRouterProvider.OnHomeWifi {
+        val onHomeWifi = mock(DevicesOnRouterProvider.OnHomeWifi::class.java)
+        `when`(onHomeWifi.isOnHomeWifi(anyObject())).thenReturn(true)
         return onHomeWifi
     }
 
-    private fun createRouterApi(
+    private fun createRouterApiFactory(
         loginResponse: Call<JsonRpcResponse<String>>,
         sysResponse: Call<JsonRpcResponse<Array<Array<String>>>>
-    ): RouterApi {
+    ): RouterApiFactory {
         val routerApi = mock(RouterApi::class.java)
         `when`(routerApi.login(anyObject())).thenReturn(loginResponse)
         `when`(routerApi.sys(anyObject(), anyString())).thenReturn(sysResponse)
-        return routerApi
+        val routerApiFactory = mock(RouterApiFactory::class.java)
+        `when`(routerApiFactory.createRouterApi(anyString())).thenReturn(routerApi)
+        return routerApiFactory
     }
 
     private fun createSuccessfulLoginResponse(): Call<JsonRpcResponse<String>> {
