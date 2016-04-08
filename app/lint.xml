@@ -9,6 +9,7 @@
     <issue id="NewerVersionAvailable">
         <!-- assertj 2.0 and later are not Android API level 23 compatible -->
         <ignore regexp="org.assertj:assertj-core" />
+        <ignore regexp="retrofit" /> <!-- Fix this later -->
     </issue>
     <issue id="UnusedIds" severity="ignore" />
     <issue id="UnusedResources" severity="ignore" />
