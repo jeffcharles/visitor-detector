@@ -3,8 +3,8 @@ package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 import com.beyondtechnicallycorrect.visitordetector.BuildConfig
 import dagger.Module
 import dagger.Provides
-import retrofit.GsonConverterFactory
-import retrofit.Retrofit
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 @Module(includes = arrayOf(DevicesOnRouterProviderImpl.DevicesOnRouterProviderImplModule::class))
 class DeviceProvidersModule {
