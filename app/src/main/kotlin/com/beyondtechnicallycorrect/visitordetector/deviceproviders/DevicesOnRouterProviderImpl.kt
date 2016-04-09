@@ -5,7 +5,7 @@ import com.beyondtechnicallycorrect.visitordetector.BuildConfig
 import dagger.Module
 import dagger.Provides
 import org.funktionale.either.Either
-import retrofit.Response
+import retrofit2.Response
 import timber.log.Timber
 import java.io.IOException
 import java.util.*
@@ -54,7 +54,7 @@ class DevicesOnRouterProviderImpl @Inject constructor(
             Timber.w(e, "IOException while logging in")
             return Either.Left(DeviceFetchingFailure.Error)
         }
-        if (!loginResponse.isSuccess) {
+        if (!loginResponse.isSuccessful) {
             Timber.w("Got status code of %d while logging in", loginResponse.code())
             return Either.Left(DeviceFetchingFailure.Error)
         }
@@ -85,7 +85,7 @@ class DevicesOnRouterProviderImpl @Inject constructor(
             Timber.w(e, "IOException while getting mac addresses")
             return Either.Left(DeviceFetchingFailure.Error)
         }
-        if (!macAddressResponse.isSuccess) {
+        if (!macAddressResponse.isSuccessful) {
             Timber.w("Got status code of %d while getting mac addresses", macAddressResponse.code())
             return Either.Left(DeviceFetchingFailure.Error)
         }

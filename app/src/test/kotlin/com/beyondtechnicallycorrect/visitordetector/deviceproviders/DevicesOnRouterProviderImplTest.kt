@@ -1,11 +1,13 @@
 package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 
+import okhttp3.MediaType
+import okhttp3.ResponseBody
 import org.assertj.core.api.Assertions.*
 import org.junit.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.*
-import retrofit.Call
-import retrofit.Response
+import retrofit2.Call
+import retrofit2.Response
 import java.io.IOException
 
 class DevicesOnRouterProviderImplTest {
@@ -54,7 +56,8 @@ class DevicesOnRouterProviderImplTest {
     @Test
     fun givenBadStatusCodeDuringLogin_ShouldReturnLeft() {
         val loginResponse: Call<JsonRpcResponse<String>> = myMock()
-        `when`(loginResponse.execute()).thenReturn(Response.error(404, null))
+        `when`(loginResponse.execute())
+            .thenReturn(Response.error(404, ResponseBody.create(MediaType.parse("text/plain"), "")))
         val routerApi = createRouterApi(loginResponse, createSuccessfulSysResponse())
 
         val devicesOnRouterProvider = DevicesOnRouterProviderImpl(routerApi, createOnHomeWifi())
@@ -89,7 +92,8 @@ class DevicesOnRouterProviderImplTest {
     @Test
     fun givenBadStatusCodeWhileGettingMacAddresses_ShouldReturnLeft() {
         val sysResponse: Call<JsonRpcResponse<Array<Array<String>>>> = myMock()
-        `when`(sysResponse.execute()).thenReturn(Response.error(500, null))
+        `when`(sysResponse.execute())
+            .thenReturn(Response.error(500, ResponseBody.create(MediaType.parse("text/plain"), "")))
         val routerApi = createRouterApi(createSuccessfulLoginResponse(), sysResponse)
 
         val devicesOnRouterProvider = DevicesOnRouterProviderImpl(routerApi, createOnHomeWifi())
