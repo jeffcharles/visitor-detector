@@ -11,4 +11,20 @@
     <string name="visitor_detected_notification_text">A non-home device has been detected on the network</string>
     <string name="error_fetching_devices">There was an issue fetching devices</string>
     <string name="error_fetching_devices_notification_title">Error detecting visitors</string>
+    <string name="welcome_activity_name">Welcome</string>
+    <string name="welcome_home_wifi_networks">Home wifi networks</string>
+    <string name="welcome_home_wifi_networks_cant_be_empty">Network name cannot be empty</string>
+    <string name="welcome_router_ip_address">Router IP address</string>
+    <string name="welcome_router_ip_address_cant_be_empty">Router IP address cannot be empty</string>
+    <string name="welcome_router_ip_address_must_be_ip_address">Router IP address must be a valid IP address</string>
+    <string name="welcome_router_ip_address_must_be_local_ip_address">Router IP address must be a local IP address</string>
+    <string name="welcome_router_username">Router username</string>
+    <string name="welcome_router_username_cant_be_empty">Router username cannot be empty</string>
+    <string name="welcome_router_password">Router password</string>
+    <string name="welcome_router_password_cant_be_empty">Router password cannot be empty</string>
+    <string name="welcome_test_settings_button_text">Test settings</string>
+    <string name="welcome_next_button_text">Next</string>
+    <string name="welcome_test_settings_not_on_network">Not on specified network</string>
+    <string name="welcome_test_settings_successful">Successfully retrieved devices</string>
+    <string name="welcome_next_failed_to_set_settings">Failed to set settings</string>
 </resources>

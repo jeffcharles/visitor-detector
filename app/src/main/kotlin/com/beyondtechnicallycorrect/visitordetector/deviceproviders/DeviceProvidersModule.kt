@@ -1,10 +1,8 @@
 package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 
-import com.beyondtechnicallycorrect.visitordetector.BuildConfig
 import dagger.Module
 import dagger.Provides
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Singleton
 
 @Module(includes = arrayOf(DevicesOnRouterProviderImpl.DevicesOnRouterProviderImplModule::class))
 class DeviceProvidersModule {
@@ -12,11 +10,7 @@ class DeviceProvidersModule {
         return provider;
     }
 
-    @Provides fun provideRouterApi(): RouterApi {
-        return Retrofit.Builder()
-            .baseUrl("http://${BuildConfig.ROUTER_IP_ADDRESS}")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(RouterApi::class.java)
+    @Provides @Singleton fun provideRouterApiFactory(factory: RouterApiFactoryImpl): RouterApiFactory {
+        return factory;
     }
 }

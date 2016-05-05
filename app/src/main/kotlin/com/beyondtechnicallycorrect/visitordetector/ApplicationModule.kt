@@ -3,10 +3,13 @@ package com.beyondtechnicallycorrect.visitordetector
 import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.wifi.WifiManager
+import android.preference.PreferenceManager
 import com.beyondtechnicallycorrect.visitordetector.broadcastreceivers.BroadcastReceiversModule
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DeviceProvidersModule
 import com.beyondtechnicallycorrect.visitordetector.persistence.PersistenceModule
+import com.beyondtechnicallycorrect.visitordetector.settings.SettingsModule
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
@@ -15,7 +18,12 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 @Module(
-    includes = arrayOf(BroadcastReceiversModule::class, DeviceProvidersModule::class, PersistenceModule::class)
+    includes = arrayOf(
+        BroadcastReceiversModule::class,
+        DeviceProvidersModule::class,
+        PersistenceModule::class,
+        SettingsModule::class
+    )
 )
 class ApplicationModule(val applicationContext: Context) {
     @Provides @Singleton fun provideAlarmManager(): AlarmManager {
@@ -40,6 +48,10 @@ class ApplicationModule(val applicationContext: Context) {
 
     @Provides @Singleton fun provideNotificationManager(): NotificationManager {
         return applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
+    @Provides @Singleton fun provideSharedPreferences(): SharedPreferences {
+        return PreferenceManager.getDefaultSharedPreferences(applicationContext)
     }
 
     @Provides @Singleton fun provideWifiManager(): WifiManager {
