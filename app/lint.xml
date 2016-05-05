@@ -4,7 +4,7 @@
     <issue id="GradleDependency" severity="ignore" />
     <issue id="InvalidPackage">
         <ignore regexp="okio-1.6.0.jar" />
-        <ignore regexp="retrofit-2.0.1.jar" />
+        <ignore regexp="retrofit-2.0.2.jar" />
     </issue>
     <issue id="NewerVersionAvailable">
         <!-- assertj 2.0 and later are not Android API level 23 compatible -->
