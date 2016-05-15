@@ -6,6 +6,7 @@ import android.support.annotation.NonNull
 import android.support.v4.app.ListFragment
 import android.view.*
 import android.widget.*
+import com.beyondtechnicallycorrect.visitordetector.ApplicationComponent
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
@@ -13,22 +14,26 @@ import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitor
 import com.beyondtechnicallycorrect.visitordetector.models.Device
 import de.greenrobot.event.EventBus
 import timber.log.Timber
+import javax.inject.Inject
 
-class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) : ListFragment() {
+class DevicesFragment() : ListFragment() {
 
-    private var deviceArrayAdapter: Adapter? = null
+    @Inject lateinit var eventBus: EventBus
+
+    private lateinit var deviceArrayAdapter: Adapter
 
     fun addDevices(devicesToAdd: Collection<Device>) {
-        if (deviceArrayAdapter != null) {
-            deviceArrayAdapter?.addAll(devicesToAdd)
-        } else {
-            devices.addAll(devicesToAdd)
-        }
+        deviceArrayAdapter.addAll(devicesToAdd)
     }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        Timber.v("Attached Timber")
+        Timber.v("onAttach")
+
+        val argumentProvider = context as ArgumentProvider
+        argumentProvider.getComponent().inject(this)
+        val devices = argumentProvider.getDeviceList(this.hashCode())
+
         deviceArrayAdapter = Adapter(this.context, devices)
         this.listAdapter = deviceArrayAdapter
     }
@@ -65,8 +70,8 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) 
 
             override fun onItemCheckedStateChanged(mode: ActionMode?, position: Int, id: Long, checked: Boolean) {
                 when (checked) {
-                    true -> deviceArrayAdapter!!.selectDevice(deviceArrayAdapter!!.getItem(position))
-                    false -> deviceArrayAdapter!!.deselectDevice(deviceArrayAdapter!!.getItem(position))
+                    true -> deviceArrayAdapter.selectDevice(deviceArrayAdapter.getItem(position))
+                    false -> deviceArrayAdapter.deselectDevice(deviceArrayAdapter.getItem(position))
                 }
                 setIsChecked(position - listView.firstVisiblePosition, checked)
             }
@@ -88,13 +93,8 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) 
     fun setDevices(devices: List<RouterDevice>) {
         val transformedDevices =
             devices.map { Device(macAddress = it.macAddress, hostName = it.hostName) }
-        if (deviceArrayAdapter != null) {
-            deviceArrayAdapter?.clear()
-            deviceArrayAdapter?.addAll(transformedDevices)
-        } else {
-            this.devices.clear()
-            this.devices.addAll(transformedDevices)
-        }
+        deviceArrayAdapter.clear()
+        deviceArrayAdapter.addAll(transformedDevices)
     }
 
     private fun moveDevicesToVisitorList() {
@@ -113,9 +113,14 @@ class DevicesFragment(val eventBus: EventBus, val devices: MutableList<Device>) 
                 checkedIndexes.add(checkedItemPositions.keyAt(i))
             }
         }
-        val devicesToMove = checkedIndexes.mapNotNull { deviceArrayAdapter?.getItem(it) }
-        devicesToMove.forEach { deviceArrayAdapter?.remove(it) }
+        val devicesToMove = checkedIndexes.mapNotNull { deviceArrayAdapter.getItem(it) }
+        devicesToMove.forEach { deviceArrayAdapter.remove(it) }
         postEvent(devicesToMove)
+    }
+
+    interface ArgumentProvider {
+        fun getComponent(): ApplicationComponent
+        fun getDeviceList(fragmentHashCode: Int): MutableList<Device>
     }
 
     private class Adapter(
