@@ -7,11 +7,6 @@ dependencies:
         - /usr/local/android-sdk-linux/build-tools/23.0.3
 test:
     override:
-        - ./gradlew build -PdisablePreDex:
-            environment:
-                VISITOR_DETECTOR_WIFI_SSIDS: fli-fi,fli-fi-n
-                VISITOR_DETECTOR_ROUTER_IP_ADDRESS: 192.168.1.1
-                VISITOR_DETECTOR_ROUTER_USERNAME: $VISITOR_DETECTOR_ROUTER_USERNAME
-                VISITOR_DETECTOR_ROUTER_PASSWORD: $VISITOR_DETECTOR_ROUTER_PASSWORD
+        - ./gradlew build -PdisablePreDex
     post:
         - cp -r app/build/outputs $CIRCLE_ARTIFACTS
