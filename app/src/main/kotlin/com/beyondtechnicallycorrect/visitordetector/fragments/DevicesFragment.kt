@@ -1,5 +1,6 @@
 package com.beyondtechnicallycorrect.visitordetector.fragments
 
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.support.annotation.NonNull
@@ -8,7 +9,6 @@ import android.view.*
 import android.widget.*
 import com.beyondtechnicallycorrect.visitordetector.ApplicationComponent
 import com.beyondtechnicallycorrect.visitordetector.R
-import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import com.beyondtechnicallycorrect.visitordetector.models.Device
@@ -20,6 +20,7 @@ class DevicesFragment() : ListFragment() {
 
     @Inject lateinit var eventBus: EventBus
 
+    private lateinit var activity: Context
     private lateinit var deviceArrayAdapter: Adapter
 
     fun addDevices(devicesToAdd: Collection<Device>) {
@@ -30,21 +31,32 @@ class DevicesFragment() : ListFragment() {
         super.onAttach(context)
         Timber.v("onAttach")
 
-        val argumentProvider = context as ArgumentProvider
+        activity = context as Activity
+    }
+
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        super.onCreateView(inflater, container, savedInstanceState)
+        Timber.v("onCreateView")
+        return inflater!!.inflate(R.layout.fragment_devices_list, container, false)
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        Timber.v("onActivityCreated")
+
+        val argumentProvider = activity as ArgumentProvider
         argumentProvider.getComponent().inject(this)
-        val devices = argumentProvider.getDeviceList(this.hashCode())
+        val deviceType = this.arguments.getInt("deviceType")
+        val devices = argumentProvider.getDeviceList(deviceType)
+        argumentProvider.setFragmentForType(deviceType, this)
 
         deviceArrayAdapter = Adapter(this.context, devices)
         this.listAdapter = deviceArrayAdapter
     }
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        super.onCreateView(inflater, container, savedInstanceState)
-        return inflater!!.inflate(R.layout.fragment_devices_list, container, false)
-    }
-
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Timber.v("onViewCreated")
         this.listView.setMultiChoiceModeListener(object : AbsListView.MultiChoiceModeListener {
 
             override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
@@ -90,11 +102,10 @@ class DevicesFragment() : ListFragment() {
         }
     }
 
-    fun setDevices(devices: List<RouterDevice>) {
-        val transformedDevices =
-            devices.map { Device(macAddress = it.macAddress, hostName = it.hostName) }
+    fun setDevices(devices: List<Device>) {
+        Timber.v("setDevices")
         deviceArrayAdapter.clear()
-        deviceArrayAdapter.addAll(transformedDevices)
+        deviceArrayAdapter.addAll(devices)
     }
 
     private fun moveDevicesToVisitorList() {
@@ -120,7 +131,8 @@ class DevicesFragment() : ListFragment() {
 
     interface ArgumentProvider {
         fun getComponent(): ApplicationComponent
-        fun getDeviceList(fragmentHashCode: Int): MutableList<Device>
+        fun getDeviceList(deviceType: Int): MutableList<Device>
+        fun setFragmentForType(deviceType: Int, devicesFragment: DevicesFragment)
     }
 
     private class Adapter(
@@ -143,6 +155,16 @@ class DevicesFragment() : ListFragment() {
             (view.findViewById(R.id.device_checkbox) as CheckBox).isChecked =
                 selectedDevices.contains(this.getItem(position))
             return view
+        }
+    }
+
+    companion object {
+        fun newInstance(deviceType: Int): DevicesFragment {
+            val fragment = DevicesFragment()
+            val arguments = Bundle()
+            arguments.putInt("deviceType", deviceType)
+            fragment.arguments = arguments
+            return fragment
         }
     }
 }
