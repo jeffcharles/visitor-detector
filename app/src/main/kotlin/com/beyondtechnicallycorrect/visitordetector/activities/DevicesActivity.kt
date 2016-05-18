@@ -31,23 +31,27 @@ import javax.inject.Inject
 
 class DevicesActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider {
 
+    companion object {
+        val unclassifiedDevicesType = 1
+        val visitorDevicesType = 2
+        val homeDevicesType = 3
+    }
+
     @Inject lateinit var devicesOnRouterProvider: DevicesOnRouterProvider
     @Inject lateinit var eventBus: EventBus
     @Inject lateinit var devicePersistence: DevicePersistence
     @Inject lateinit var alarmSchedulingHelper: AlarmSchedulingHelper
 
-    private lateinit var applicationComponent: ApplicationComponent
-
+    private val unclassifiedDevicesList: MutableList<Device> = mutableListOf()
     private val visitorDevicesList: MutableList<Device> = mutableListOf()
     private val homeDevicesList: MutableList<Device> = mutableListOf()
-    private val unclassifiedDevicesFragment: DevicesFragment = DevicesFragment()
-    private val visitorDevicesFragment: DevicesFragment = DevicesFragment()
-    private val homeDevicesFragment: DevicesFragment = DevicesFragment()
+
+    private lateinit var adapter: PagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        applicationComponent = (this.application as VisitorDetectorApplication).getApplicationComponent()
-        applicationComponent.inject(this)
+        Timber.v("onCreate")
+        getComponent().inject(this)
 
         alarmSchedulingHelper.setupAlarm()
 
@@ -63,16 +67,14 @@ class DevicesActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider {
             savedDevices.homeDevices.map { Device(macAddress = it.macAddress, hostName = null) }
         )
 
-        val adapter = PagerAdapter(
+        adapter = PagerAdapter(
             this.supportFragmentManager,
             eventBus,
             this,
             devicePersistence,
+            unclassifiedDevicesList,
             homeDevicesList,
-            visitorDevicesList,
-            unclassifiedDevicesFragment,
-            visitorDevicesFragment,
-            homeDevicesFragment
+            visitorDevicesList
         )
         pager.adapter = adapter
         val tabLayout = this.findViewById(R.id.tabs) as TabLayout
@@ -82,16 +84,21 @@ class DevicesActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider {
     }
 
     override fun getComponent(): ApplicationComponent {
-        return applicationComponent
+        return (this.application as VisitorDetectorApplication).getApplicationComponent()
     }
 
-    override fun getDeviceList(fragmentHashCode: Int): MutableList<Device> {
-        return when (fragmentHashCode) {
-            unclassifiedDevicesFragment.hashCode() -> mutableListOf()
-            visitorDevicesFragment.hashCode() -> visitorDevicesList
-            homeDevicesFragment.hashCode() -> homeDevicesList
+    override fun getDeviceList(deviceType: Int): MutableList<Device> {
+        Timber.v("getDeviceList(deviceType = %d)", deviceType)
+        return when (deviceType) {
+            unclassifiedDevicesType -> unclassifiedDevicesList
+            visitorDevicesType -> visitorDevicesList
+            homeDevicesType -> homeDevicesList
             else -> throw IllegalArgumentException("Should not have gotten here")
         }
+    }
+
+    override fun setFragmentForType(deviceType: Int, devicesFragment: DevicesFragment) {
+        adapter.setFragmentForType(deviceType, devicesFragment)
     }
 
     private class GetDevicesTask(
@@ -122,12 +129,14 @@ class DevicesActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider {
         eventBus: EventBus,
         val context: Context,
         val devicePersistence: DevicePersistence,
+        val unclassifiedDevicesList: MutableList<Device>,
         val homeDevicesList: MutableList<Device>,
-        val visitorDevicesList: MutableList<Device>,
-        val unclassifiedDevicesFragment: DevicesFragment,
-        val visitorDevicesFragment: DevicesFragment,
-        val homeDevicesFragment: DevicesFragment
+        val visitorDevicesList: MutableList<Device>
     ) : FragmentPagerAdapter(fm) {
+
+        private var unclassifiedDevicesFragment: DevicesFragment? = null
+        private var visitorDevicesFragment: DevicesFragment? = null
+        private var homeDevicesFragment: DevicesFragment? = null
 
         init {
             eventBus.register(this)
@@ -139,9 +148,9 @@ class DevicesActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider {
 
         override fun getItem(position: Int): Fragment {
             return when (position) {
-                0 -> unclassifiedDevicesFragment
-                1 -> visitorDevicesFragment
-                2 -> homeDevicesFragment
+                0 -> DevicesFragment.newInstance(unclassifiedDevicesType)
+                1 -> DevicesFragment.newInstance(visitorDevicesType)
+                2 -> DevicesFragment.newInstance(homeDevicesType)
                 else -> throw IllegalArgumentException("Received invalid position argument")
             }
         }
@@ -157,8 +166,8 @@ class DevicesActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider {
 
         // used by EventBus
         fun onEvent(event: DevicesMovedToHomeList) {
-            if (homeDevicesFragment.isAdded) {
-                homeDevicesFragment.addDevices(event.devices)
+            if (homeDevicesFragment != null && homeDevicesFragment!!.isAdded) {
+                homeDevicesFragment!!.addDevices(event.devices)
             } else {
                 homeDevicesList.addAll(event.devices)
             }
@@ -167,23 +176,39 @@ class DevicesActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider {
 
         // used by EventBus
         fun onEvent(event: DevicesMovedToVisitorList) {
-            if (visitorDevicesFragment.isAdded) {
-                visitorDevicesFragment.addDevices(event.devices)
+            if (visitorDevicesFragment != null && visitorDevicesFragment!!.isAdded) {
+                visitorDevicesFragment!!.addDevices(event.devices)
             } else {
                 visitorDevicesList.addAll(event.devices)
             }
             save()
         }
 
+        fun setFragmentForType(deviceType: Int, devicesFragment: DevicesFragment) {
+            when (deviceType) {
+                unclassifiedDevicesType -> unclassifiedDevicesFragment = devicesFragment
+                visitorDevicesType -> visitorDevicesFragment = devicesFragment
+                homeDevicesType -> homeDevicesFragment = devicesFragment
+                else -> throw IllegalArgumentException("Unknown device type of $deviceType")
+            }
+        }
+
         fun setConnectedDevices(connectedDevices: List<RouterDevice>) {
+            Timber.v("setConnectedDevices")
             val connectedDevicesByMacAddress = connectedDevices.associateBy { it.macAddress }
             val homeMacAddresses = homeDevicesList.map { it.macAddress }.toSet()
             val visitorMacAddresses = visitorDevicesList.map { it.macAddress }.toSet()
             val unclassifiedDevices =
                 (connectedDevicesByMacAddress.keys - homeMacAddresses - visitorMacAddresses)
                     .map { connectedDevicesByMacAddress[it]!! }
+                    .map { Device(macAddress = it.macAddress, hostName = it.hostName) }
                     .toMutableList()
-            unclassifiedDevicesFragment.setDevices(unclassifiedDevices)
+            if (unclassifiedDevicesFragment != null && unclassifiedDevicesFragment!!.isAdded) {
+                unclassifiedDevicesFragment!!.setDevices(unclassifiedDevices)
+            } else {
+                unclassifiedDevicesList.clear()
+                unclassifiedDevicesList.addAll(unclassifiedDevices)
+            }
         }
 
         private fun save() {
