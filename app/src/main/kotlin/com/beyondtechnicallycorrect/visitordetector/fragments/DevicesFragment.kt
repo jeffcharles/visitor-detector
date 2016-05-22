@@ -7,8 +7,8 @@ import android.support.annotation.NonNull
 import android.support.v4.app.ListFragment
 import android.view.*
 import android.widget.*
-import com.beyondtechnicallycorrect.visitordetector.ApplicationComponent
 import com.beyondtechnicallycorrect.visitordetector.R
+import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import com.beyondtechnicallycorrect.visitordetector.models.Device
@@ -45,7 +45,9 @@ class DevicesFragment() : ListFragment() {
         Timber.v("onActivityCreated")
 
         val argumentProvider = activity as ArgumentProvider
-        argumentProvider.getComponent().inject(this)
+        (this.context.applicationContext as VisitorDetectorApplication)
+            .getApplicationComponent()
+            .inject(this)
         val deviceType = this.arguments.getInt("deviceType")
         val devices = argumentProvider.getDeviceList(deviceType)
         argumentProvider.setFragmentForType(deviceType, this)
@@ -130,7 +132,6 @@ class DevicesFragment() : ListFragment() {
     }
 
     interface ArgumentProvider {
-        fun getComponent(): ApplicationComponent
         fun getDeviceList(deviceType: Int): MutableList<Device>
         fun setFragmentForType(deviceType: Int, devicesFragment: DevicesFragment)
     }
