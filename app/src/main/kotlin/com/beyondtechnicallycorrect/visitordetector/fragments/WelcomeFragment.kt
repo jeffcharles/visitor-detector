@@ -56,13 +56,13 @@ class WelcomeFragment() : Fragment() {
         return inflater!!.inflate(R.layout.fragment_welcome, container, false)
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        Timber.v("onActivityCreated")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        Timber.v("onViewCreated")
 
-        val testSettingsButton = this.view!!.findViewById(R.id.test_settings) as Button
+        val testSettingsButton = view.findViewById(R.id.test_settings) as Button
         testSettingsButton.isEnabled = false
-        val nextButton = this.view!!.findViewById(R.id.next_button) as Button
+        val nextButton = view.findViewById(R.id.next_button) as Button
         nextButton.isEnabled = false
         val validationState = ValidationState { allValid ->
             run {
@@ -70,16 +70,16 @@ class WelcomeFragment() : Fragment() {
                 nextButton.isEnabled = allValid
             }
         }
-        val homeWifiNetworksEdit = this.view!!.findViewById(R.id.home_wifi_networks) as EditText
-        val homeWifiNetworksLabel = this.view!!.findViewById(R.id.home_wifi_networks_label) as TextInputLayout
+        val homeWifiNetworksEdit = view.findViewById(R.id.home_wifi_networks) as EditText
+        val homeWifiNetworksLabel = view.findViewById(R.id.home_wifi_networks_label) as TextInputLayout
         addNotEmptyValidation(
             homeWifiNetworksEdit,
             homeWifiNetworksLabel,
             R.string.welcome_home_wifi_networks_cant_be_empty,
             { valid -> validationState.validNetworkSsids = valid }
         )
-        val routerIpAddressEdit = this.view!!.findViewById(R.id.router_ip_address) as EditText
-        val routerIpAddressLabel = this.view!!.findViewById(R.id.router_ip_address_label) as TextInputLayout
+        val routerIpAddressEdit = view.findViewById(R.id.router_ip_address) as EditText
+        val routerIpAddressLabel = view.findViewById(R.id.router_ip_address_label) as TextInputLayout
         routerIpAddressEdit.onFocusChangeListener = View.OnFocusChangeListener { view, hasFocus ->
             if (!hasFocus) {
                 validateRouterIpAddress(
@@ -104,16 +104,16 @@ class WelcomeFragment() : Fragment() {
             override fun onTextChanged(s: CharSequence, start: Int, Before: Int, count: Int) {
             }
         })
-        val routerUsernameEdit = this.view!!.findViewById(R.id.router_username) as EditText
-        val routerUsernameLabel = this.view!!.findViewById(R.id.router_username_label) as TextInputLayout
+        val routerUsernameEdit = view.findViewById(R.id.router_username) as EditText
+        val routerUsernameLabel = view.findViewById(R.id.router_username_label) as TextInputLayout
         addNotEmptyValidation(
             routerUsernameEdit,
             routerUsernameLabel,
             R.string.welcome_router_username_cant_be_empty,
             { valid -> validationState.validRouterUsername = valid }
         )
-        val routerPasswordEdit = this.view!!.findViewById(R.id.router_password) as EditText
-        val routerPasswordLabel = this.view!!.findViewById(R.id.router_password_label) as TextInputLayout
+        val routerPasswordEdit = view.findViewById(R.id.router_password) as EditText
+        val routerPasswordLabel = view.findViewById(R.id.router_password_label) as TextInputLayout
         addNotEmptyValidation(
             routerPasswordEdit,
             routerPasswordLabel,

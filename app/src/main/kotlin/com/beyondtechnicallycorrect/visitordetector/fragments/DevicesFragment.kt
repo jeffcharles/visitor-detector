@@ -34,26 +34,18 @@ class DevicesFragment() : ListFragment() {
         activity = context as Activity
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Timber.v("onCreate")
+        (this.context.applicationContext as VisitorDetectorApplication)
+            .getApplicationComponent()
+            .inject(this)
+    }
+
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
         super.onCreateView(inflater, container, savedInstanceState)
         Timber.v("onCreateView")
         return inflater!!.inflate(R.layout.fragment_devices_list, container, false)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        Timber.v("onActivityCreated")
-
-        val argumentProvider = activity as ArgumentProvider
-        (this.context.applicationContext as VisitorDetectorApplication)
-            .getApplicationComponent()
-            .inject(this)
-        val deviceType = this.arguments.getInt("deviceType")
-        val devices = argumentProvider.getDeviceList(deviceType)
-        argumentProvider.setFragmentForType(deviceType, this)
-
-        deviceArrayAdapter = Adapter(this.context, devices)
-        this.listAdapter = deviceArrayAdapter
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -102,6 +94,19 @@ class DevicesFragment() : ListFragment() {
             // does not fire on de-selection but seems to uncheck properly
             this.listView.setItemChecked(position, !this.listView.isItemChecked(position))
         }
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        Timber.v("onActivityCreated")
+
+        val argumentProvider = activity as ArgumentProvider
+        val deviceType = this.arguments.getInt("deviceType")
+        val devices = argumentProvider.getDeviceList(deviceType)
+        argumentProvider.setFragmentForType(deviceType, this)
+
+        deviceArrayAdapter = Adapter(this.context, devices)
+        this.listAdapter = deviceArrayAdapter
     }
 
     fun setDevices(devices: List<Device>) {
