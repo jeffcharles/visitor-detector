@@ -66,7 +66,10 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val pager = this.view!!.findViewById(R.id.pager) as ViewPager
+        super.onViewCreated(view, savedInstanceState)
+        Timber.v("onViewCreated")
+
+        val pager = view.findViewById(R.id.pager) as ViewPager
         val savedDevices = devicePersistence.getSavedDevices()
 
         visitorDevicesList.addAll(
@@ -86,7 +89,7 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
             visitorDevicesList
         )
         pager.adapter = adapter
-        val tabLayout = this.view!!.findViewById(R.id.tabs) as TabLayout
+        val tabLayout = view.findViewById(R.id.tabs) as TabLayout
         tabLayout.setupWithViewPager(pager)
 
         GetDevicesTask(this.context, devicesOnRouterProvider, adapter).execute()
