@@ -69,6 +69,9 @@ class DevicesFragment() : ListFragment() {
             }
 
             override fun onDestroyActionMode(mode: ActionMode?) {
+                if (this@DevicesFragment.view == null) {
+                    return
+                }
                 for(i in 0..(listView.childCount - 1)) {
                     setIsChecked(position = i, checked = false)
                 }
