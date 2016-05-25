@@ -20,7 +20,7 @@ class DevicesFragment() : ListFragment() {
 
     @Inject lateinit var eventBus: EventBus
 
-    private lateinit var activity: Context
+    private lateinit var activity: ArgumentProvider
     private lateinit var deviceArrayAdapter: Adapter
 
     fun addDevices(devicesToAdd: Collection<Device>) {
@@ -31,7 +31,7 @@ class DevicesFragment() : ListFragment() {
         super.onAttach(context)
         Timber.v("onAttach")
 
-        activity = context as Activity
+        activity = context as ArgumentProvider
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,13 +65,13 @@ class DevicesFragment() : ListFragment() {
 
             override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
                 mode.menuInflater.inflate(R.menu.devices_menu, menu)
+                activity.setActionMode(mode)
                 return true
             }
 
             override fun onDestroyActionMode(mode: ActionMode?) {
-                if (this@DevicesFragment.view == null) {
-                    return
-                }
+                Timber.v("onDestroyActionMode")
+                activity.setActionMode(null)
                 for(i in 0..(listView.childCount - 1)) {
                     setIsChecked(position = i, checked = false)
                 }
@@ -103,10 +103,9 @@ class DevicesFragment() : ListFragment() {
         super.onActivityCreated(savedInstanceState)
         Timber.v("onActivityCreated")
 
-        val argumentProvider = activity as ArgumentProvider
         val deviceType = this.arguments.getInt("deviceType")
-        val devices = argumentProvider.getDeviceList(deviceType)
-        argumentProvider.setFragmentForType(deviceType, this)
+        val devices = activity.getDeviceList(deviceType)
+        activity.setFragmentForType(deviceType, this)
 
         deviceArrayAdapter = Adapter(this.context, devices)
         this.listAdapter = deviceArrayAdapter
@@ -141,6 +140,7 @@ class DevicesFragment() : ListFragment() {
 
     interface ArgumentProvider {
         fun getDeviceList(deviceType: Int): MutableList<Device>
+        fun setActionMode(actionMode: ActionMode?)
         fun setFragmentForType(deviceType: Int, devicesFragment: DevicesFragment)
     }
 

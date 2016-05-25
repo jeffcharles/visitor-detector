@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
+import android.view.ActionMode
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,6 +50,8 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
 
     private lateinit var adapter: PagerAdapter
 
+    private var actionMode: ActionMode? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.v("onCreate")
@@ -70,6 +73,11 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
         Timber.v("onViewCreated")
 
         val pager = view.findViewById(R.id.pager) as ViewPager
+        pager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
+            override fun onPageSelected(position: Int) {
+                actionMode?.finish()
+            }
+        })
         val savedDevices = devicePersistence.getSavedDevices()
 
         visitorDevicesList.addAll(
@@ -103,6 +111,10 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
             homeDevicesType -> homeDevicesList
             else -> throw IllegalArgumentException("Should not have gotten here")
         }
+    }
+
+    override fun setActionMode(actionMode: ActionMode?) {
+        this.actionMode = actionMode
     }
 
     override fun setFragmentForType(deviceType: Int, devicesFragment: DevicesFragment) {
