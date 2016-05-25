@@ -16,13 +16,8 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".activities.DevicesActivity"
-            android:label="@string/devices_activity_title">
-        </activity>
-        <activity
-            android:name=".activities.WelcomeActivity"
-            android:label="@string/welcome_activity_name"
-            android:noHistory="true">
+            android:name=".activities.MainActivity"
+            android:label="@string/main_activity_title">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Visitor Detector</string>
     <string name="no_devices">No devices</string>
-    <string name="devices_activity_title">Devices</string>
+    <string name="main_activity_title">Visitor Detector</string>
     <string name="unclassified_devices_tab_title">Unclassified</string>
     <string name="visitor_devices_tab_title">Visitor</string>
     <string name="home_devices_tab_title">Home</string>
@@ -11,7 +11,6 @@
     <string name="visitor_detected_notification_text">A non-home device has been detected on the network</string>
     <string name="error_fetching_devices">There was an issue fetching devices</string>
     <string name="error_fetching_devices_notification_title">Error detecting visitors</string>
-    <string name="welcome_activity_name">Welcome</string>
     <string name="welcome_home_wifi_networks">Home wifi networks</string>
     <string name="welcome_home_wifi_networks_cant_be_empty">Network name cannot be empty</string>
     <string name="welcome_router_ip_address">Router IP address</string>
