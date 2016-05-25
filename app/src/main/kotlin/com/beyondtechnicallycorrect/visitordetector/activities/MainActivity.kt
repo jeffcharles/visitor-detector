@@ -4,27 +4,47 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.ActionMode
 import com.beyondtechnicallycorrect.visitordetector.R
+import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesTabsFragment
+import com.beyondtechnicallycorrect.visitordetector.fragments.WelcomeFragment
 import com.beyondtechnicallycorrect.visitordetector.models.Device
+import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettingsGetter
 import timber.log.Timber
+import javax.inject.Inject
 
-class DevicesActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider {
+class MainActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider, WelcomeFragment.Callbacks {
 
-    val devicesTabsFragmentTag = "devicesTabs"
+    @Inject lateinit var routerSettingsGetter: RouterSettingsGetter
+
+    private val devicesTabsFragmentTag = "devicesTabs"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.v("onCreate")
-        setContentView(R.layout.activity_devices)
+        setContentView(R.layout.activity_main)
+
+        (this.applicationContext as VisitorDetectorApplication)
+            .getApplicationComponent()
+            .inject(this)
 
         if (savedInstanceState != null) {
             return
         }
-        val devicesTabsFragment = DevicesTabsFragment()
+
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        if (routerSettingsGetter.areRouterSettingsSet()) {
+            fragmentTransaction.add(R.id.fragment_container, DevicesTabsFragment(), devicesTabsFragmentTag)
+        } else {
+            fragmentTransaction.add(R.id.fragment_container, WelcomeFragment())
+        }
+        fragmentTransaction.commit()
+    }
+
+    override fun doneEnteringSettings() {
         supportFragmentManager
             .beginTransaction()
-            .add(R.id.fragment_container, devicesTabsFragment, devicesTabsFragmentTag)
+            .replace(R.id.fragment_container, DevicesTabsFragment(), devicesTabsFragmentTag)
             .commit()
     }
 

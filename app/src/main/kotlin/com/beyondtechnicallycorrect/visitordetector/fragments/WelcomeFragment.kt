@@ -1,7 +1,6 @@
 package com.beyondtechnicallycorrect.visitordetector.fragments
 
 import android.content.Context
-import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.annotation.StringRes
@@ -17,10 +16,8 @@ import android.widget.EditText
 import android.widget.Toast
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
-import com.beyondtechnicallycorrect.visitordetector.activities.DevicesActivity
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
 import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettings
-import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettingsGetter
 import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettingsSetter
 import com.beyondtechnicallycorrect.visitordetector.validators.NotEmptyValidator
 import com.beyondtechnicallycorrect.visitordetector.validators.RouterIpAddressValidator
@@ -34,20 +31,14 @@ class WelcomeFragment() : Fragment() {
     @Inject lateinit var routerIpAddressValidator: RouterIpAddressValidator
     @Inject lateinit var onHomeWifi: DevicesOnRouterProvider.OnHomeWifi
     @Inject lateinit var devicesOnRouterProvider: DevicesOnRouterProvider
-    @Inject lateinit var routerSettingsGetter: RouterSettingsGetter
     @Inject lateinit var routerSettingsSetter: RouterSettingsSetter
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        Timber.v("onAttach")
-
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Timber.v("onCreate")
         (this.context.applicationContext as VisitorDetectorApplication)
             .getApplicationComponent()
             .inject(this)
-
-        if (routerSettingsGetter.areRouterSettingsSet()) {
-            goToDeviceList()
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -156,14 +147,9 @@ class WelcomeFragment() : Fragment() {
                     )
                     .show()
             } else {
-                goToDeviceList()
+                (activity as Callbacks).doneEnteringSettings()
             }
         }
-    }
-
-    private fun goToDeviceList() {
-        val intent = Intent(this.context, DevicesActivity::class.java)
-        startActivity(intent)
     }
 
     private fun addNotEmptyValidation(
@@ -224,6 +210,10 @@ class WelcomeFragment() : Fragment() {
                 getString(R.string.welcome_router_ip_address_must_be_local_ip_address)
         }
         validationStateFunc(result == RouterIpAddressValidator.Result.VALID)
+    }
+
+    interface Callbacks {
+        fun doneEnteringSettings()
     }
 
     private class ValidationState(val onValidationChange: (Boolean) -> Unit) {
