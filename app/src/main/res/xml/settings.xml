@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.beyondtechnicallycorrect.visitordetector.preferences.EditTextSetPreference
+        android:key="home_wifi_ssids"
+        android:title="@string/settings_home_wifi_networks" />
+    <com.beyondtechnicallycorrect.visitordetector.preferences.EditTextPreferenceWithSummary
+        android:key="router_ip_address"
+        android:title="@string/settings_router_ip_address" />
+    <com.beyondtechnicallycorrect.visitordetector.preferences.EditTextPreferenceWithSummary
+        android:key="router_username"
+        android:title="@string/settings_router_username" />
+    <com.beyondtechnicallycorrect.visitordetector.preferences.EditPasswordPreference
+        android:key="router_password"
+        android:title="@string/settings_router_password" />
+</PreferenceScreen>

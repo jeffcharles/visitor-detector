@@ -9,32 +9,27 @@ class RouterSettingsProvider @Inject constructor(
     private val sharedPrefences: SharedPreferences
 ) : RouterSettingsGetter, RouterSettingsSetter {
 
-    private val homeWifiSsids = "home_wifi_ssids"
-    private val routerIpAddress = "router_ip_address"
-    private val routerUsername = "router_username"
-    private val routerPassword = "router_password"
-
     override fun areRouterSettingsSet(): Boolean {
-        return sharedPrefences.contains(homeWifiSsids)
-            && sharedPrefences.contains(routerIpAddress)
-            && sharedPrefences.contains(routerUsername)
-            && sharedPrefences.contains(routerPassword)
+        return sharedPrefences.contains(RouterSettingsKeys.homeWifiSsids)
+            && sharedPrefences.contains(RouterSettingsKeys.routerIpAddress)
+            && sharedPrefences.contains(RouterSettingsKeys.routerUsername)
+            && sharedPrefences.contains(RouterSettingsKeys.routerPassword)
     }
 
     override fun getRouterSettings(): RouterSettings {
-        val homeWifiSsids = sharedPrefences.getStringSet(homeWifiSsids, setOf())
-        val routerIpAddress = sharedPrefences.getString(routerIpAddress, "")
-        val routerUsername = sharedPrefences.getString(routerUsername, "")
-        val routerPassword = sharedPrefences.getString(routerPassword, "")
+        val homeWifiSsids = sharedPrefences.getStringSet(RouterSettingsKeys.homeWifiSsids, setOf())
+        val routerIpAddress = sharedPrefences.getString(RouterSettingsKeys.routerIpAddress, "")
+        val routerUsername = sharedPrefences.getString(RouterSettingsKeys.routerUsername, "")
+        val routerPassword = sharedPrefences.getString(RouterSettingsKeys.routerPassword, "")
         return RouterSettings(homeWifiSsids.toList(), routerIpAddress, routerUsername, routerPassword)
     }
 
     override fun setRouterSettings(routerSettings: RouterSettings): Boolean {
         val editableSharedPreferences = sharedPrefences.edit()
-        editableSharedPreferences.putStringSet(homeWifiSsids, routerSettings.homeNetworkSsids.toMutableSet())
-        editableSharedPreferences.putString(routerIpAddress, routerSettings.routerIpAddress)
-        editableSharedPreferences.putString(routerUsername, routerSettings.routerUsername)
-        editableSharedPreferences.putString(routerPassword, routerSettings.routerPassword)
+        editableSharedPreferences.putStringSet(RouterSettingsKeys.homeWifiSsids, routerSettings.homeNetworkSsids.toMutableSet())
+        editableSharedPreferences.putString(RouterSettingsKeys.routerIpAddress, routerSettings.routerIpAddress)
+        editableSharedPreferences.putString(RouterSettingsKeys.routerUsername, routerSettings.routerUsername)
+        editableSharedPreferences.putString(RouterSettingsKeys.routerPassword, routerSettings.routerPassword)
         return editableSharedPreferences.commit()
     }
 }
