@@ -8,6 +8,8 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
+import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.Toolbar
 import android.view.ActionMode
 import android.view.LayoutInflater
 import android.view.View
@@ -101,6 +103,13 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
         tabLayout.setupWithViewPager(pager)
 
         GetDevicesTask(this.context, devicesOnRouterProvider, adapter).execute()
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        Timber.v("onActivityCreated")
+        (activity as AppCompatActivity)
+            .setSupportActionBar(this.view!!.findViewById(R.id.toolbar) as Toolbar)
     }
 
     override fun getDeviceList(deviceType: Int): MutableList<Device> {
