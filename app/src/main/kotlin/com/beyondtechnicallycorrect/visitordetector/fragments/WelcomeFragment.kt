@@ -152,6 +152,13 @@ class WelcomeFragment() : Fragment() {
         }
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        Timber.v("onActivityCreated")
+        (activity as Callbacks).disableNavigationDrawer()
+        activity.title = this.getString(R.string.welcome_fragment_title)
+    }
+
     private fun addNotEmptyValidation(
         editText: EditText,
         label: TextInputLayout,
@@ -214,6 +221,7 @@ class WelcomeFragment() : Fragment() {
 
     interface Callbacks {
         fun doneEnteringSettings()
+        fun disableNavigationDrawer()
     }
 
     private class ValidationState(val onValidationChange: (Boolean) -> Unit) {

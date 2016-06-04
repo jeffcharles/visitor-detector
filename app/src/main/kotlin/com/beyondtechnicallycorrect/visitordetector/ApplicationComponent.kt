@@ -5,6 +5,7 @@ import com.beyondtechnicallycorrect.visitordetector.broadcastreceivers.AlarmRece
 import com.beyondtechnicallycorrect.visitordetector.broadcastreceivers.BootReceiver
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesTabsFragment
+import com.beyondtechnicallycorrect.visitordetector.fragments.SettingsFragment
 import com.beyondtechnicallycorrect.visitordetector.fragments.WelcomeFragment
 import dagger.Component
 import javax.inject.Singleton
@@ -17,5 +18,6 @@ interface ApplicationComponent {
     fun inject(receiver: BootReceiver)
     fun inject(fragment: DevicesFragment)
     fun inject(fragment: DevicesTabsFragment)
+    fun inject(fragment: SettingsFragment)
     fun inject(fragment: WelcomeFragment)
 }
