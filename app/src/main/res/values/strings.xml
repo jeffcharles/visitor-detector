@@ -18,6 +18,7 @@
     <string name="error_fetching_devices_notification_title">Error detecting visitors</string>
     <string name="settings_fragment_title">Settings</string>
     <string name="settings_home_wifi_networks">Home wifi networks</string>
+    <string name="settings_values_split_by_newline">Split multiple values by newline</string>
     <string name="settings_router_ip_address">Router IP address</string>
     <string name="settings_router_username">Router username</string>
     <string name="settings_router_password">Router password</string>
