@@ -14,12 +14,17 @@ class EditTextSetPreference(context: Context, val attributeSet: AttributeSet?, d
 
     constructor(context: Context): this(context, null)
 
+    init {
+        dialogLayoutResource = R.layout.view_preference_edittextset
+    }
+
     override fun persistString(value: String?): Boolean {
         if (this.shouldPersist()) {
             if (value === this.getPersistedString(null as String?)) {
                 return true
             } else {
-                PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet(key, setOf(value)).apply()
+                val splitValue = if (value != null) value.split("\n").toSet() else value
+                PreferenceManager.getDefaultSharedPreferences(context).edit().putStringSet(key, splitValue).apply()
                 return true
             }
         } else {
@@ -28,7 +33,7 @@ class EditTextSetPreference(context: Context, val attributeSet: AttributeSet?, d
     }
 
     override fun getPersistedString(defaultReturnValue: String?): String? {
-        return if (!this.shouldPersist()) defaultReturnValue else PreferenceManager.getDefaultSharedPreferences(context).getStringSet(key, setOf(defaultReturnValue)).first()
+        return if (!this.shouldPersist()) defaultReturnValue else PreferenceManager.getDefaultSharedPreferences(context).getStringSet(key, setOf(defaultReturnValue)).joinToString("\n")
     }
 
     override fun setText(value: String) {
