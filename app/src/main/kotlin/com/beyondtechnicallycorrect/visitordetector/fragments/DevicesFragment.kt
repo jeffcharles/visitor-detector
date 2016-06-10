@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.support.annotation.NonNull
+import android.support.v4.app.FragmentManager
 import android.support.v4.app.ListFragment
 import android.view.*
 import android.widget.*
@@ -107,7 +108,7 @@ class DevicesFragment() : ListFragment() {
         val devices = activity.getDeviceList(deviceType)
         activity.setFragmentForType(deviceType, this)
 
-        deviceArrayAdapter = Adapter(this.context, devices)
+        deviceArrayAdapter = Adapter(this.context, devices, childFragmentManager)
         this.listAdapter = deviceArrayAdapter
     }
 
@@ -115,6 +116,11 @@ class DevicesFragment() : ListFragment() {
         Timber.v("setDevices")
         deviceArrayAdapter.clear()
         deviceArrayAdapter.addAll(devices)
+    }
+
+    fun refreshListView() {
+        Timber.v("refreshListView")
+        deviceArrayAdapter.notifyDataSetChanged()
     }
 
     private fun moveDevicesToVisitorList() {
@@ -146,7 +152,8 @@ class DevicesFragment() : ListFragment() {
 
     private class Adapter(
         context: Context,
-        @NonNull objects: MutableList<Device>
+        @NonNull objects: MutableList<Device>,
+        @NonNull val childFragmentManager: FragmentManager
     ) : ArrayAdapter<Device>(context, R.layout.device_list_item, R.id.device, objects) {
 
         private val selectedDevices: MutableSet<Device> = hashSetOf()
@@ -163,6 +170,15 @@ class DevicesFragment() : ListFragment() {
             val view = super.getView(position, convertView, parent)
             (view.findViewById(R.id.device_checkbox) as CheckBox).isChecked =
                 selectedDevices.contains(this.getItem(position))
+            val editDescriptionButton = view.findViewById(R.id.edit_description) as ImageButton
+            editDescriptionButton.setOnClickListener {
+                val device = this.getItem(position)
+                val descriptionDialogFragment = DeviceDescriptionDialogFragment.newInstance(
+                    deviceMacAddress = device.macAddress,
+                    currentDescription = device.description
+                )
+                descriptionDialogFragment.show(childFragmentManager, "description")
+            }
             return view
         }
     }

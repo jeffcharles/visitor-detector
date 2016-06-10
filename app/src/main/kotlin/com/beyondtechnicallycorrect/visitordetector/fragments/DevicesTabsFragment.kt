@@ -19,6 +19,7 @@ import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DeviceFetchingFailure
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
+import com.beyondtechnicallycorrect.visitordetector.events.DeviceDescriptionSetEvent
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment.ArgumentProvider
@@ -81,10 +82,10 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
         val savedDevices = devicePersistence.getSavedDevices()
 
         visitorDevicesList.addAll(
-            savedDevices.visitorDevices.map { Device(macAddress = it.macAddress, hostName = null) }
+            savedDevices.visitorDevices.map { Device(macAddress = it.macAddress, hostName = null, description = it.description) }
         )
         homeDevicesList.addAll(
-            savedDevices.homeDevices.map { Device(macAddress = it.macAddress, hostName = null) }
+            savedDevices.homeDevices.map { Device(macAddress = it.macAddress, hostName = null, description = it.description) }
         )
 
         adapter = PagerAdapter(
@@ -215,6 +216,51 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
             save()
         }
 
+        // used by EventBus
+        fun onEvent(deviceDescriptionSetEvent: DeviceDescriptionSetEvent) {
+            Timber.v("onEvent(deviceDescriptionSetEvent = %s)", deviceDescriptionSetEvent)
+            var shouldSave = false
+            var refreshUnclassified: Boolean
+            var refreshHome = false
+            var refreshVisitor = false
+            var possibleDevice =
+                unclassifiedDevicesList.firstOrNull { it.macAddress == deviceDescriptionSetEvent.macAddress }
+            refreshUnclassified = true
+            if (possibleDevice == null) {
+                refreshUnclassified = false
+                shouldSave = true
+                possibleDevice = homeDevicesList.firstOrNull { it.macAddress == deviceDescriptionSetEvent.macAddress }
+                refreshHome = true
+            }
+            if (possibleDevice == null) {
+                refreshHome = false
+                shouldSave = true
+                possibleDevice = visitorDevicesList.firstOrNull { it.macAddress == deviceDescriptionSetEvent.macAddress }
+                refreshVisitor = true
+            }
+            if (possibleDevice == null) {
+                throw UnsupportedOperationException("At least one list should contain item with mac address")
+            }
+            possibleDevice.description = deviceDescriptionSetEvent.description
+            if (shouldSave) {
+                devicePersistence.saveDevices(
+                    Devices(
+                        visitorDevices = visitorDevicesList.map { SavedDevice(macAddress = it.macAddress, description = it.description) },
+                        homeDevices = homeDevicesList.map { SavedDevice(macAddress = it.macAddress, description = it.description) }
+                    )
+                )
+            }
+            if (refreshUnclassified) {
+                unclassifiedDevicesFragment!!.refreshListView()
+            }
+            if (refreshHome) {
+                homeDevicesFragment!!.refreshListView()
+            }
+            if (refreshVisitor) {
+                visitorDevicesFragment!!.refreshListView()
+            }
+        }
+
         fun setFragmentForType(deviceType: Int, devicesFragment: DevicesFragment) {
             when (deviceType) {
                 unclassifiedDevicesType -> unclassifiedDevicesFragment = devicesFragment
@@ -232,7 +278,7 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
             val unclassifiedDevices =
                 (connectedDevicesByMacAddress.keys - homeMacAddresses - visitorMacAddresses)
                     .map { connectedDevicesByMacAddress[it]!! }
-                    .map { Device(macAddress = it.macAddress, hostName = it.hostName) }
+                    .map { Device(macAddress = it.macAddress, hostName = it.hostName, description = "") }
                     .toMutableList()
             if (unclassifiedDevicesFragment != null && unclassifiedDevicesFragment!!.isAdded) {
                 unclassifiedDevicesFragment!!.setDevices(unclassifiedDevices)
@@ -245,8 +291,8 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
         private fun save() {
             devicePersistence.saveDevices(
                 Devices(
-                    visitorDevices = visitorDevicesList.map { SavedDevice(macAddress = it.macAddress) },
-                    homeDevices = homeDevicesList.map { SavedDevice(macAddress = it.macAddress) }
+                    visitorDevices = visitorDevicesList.map { SavedDevice(macAddress = it.macAddress, description = it.description) },
+                    homeDevices = homeDevicesList.map { SavedDevice(macAddress = it.macAddress, description = it.description) }
                 )
             )
         }
