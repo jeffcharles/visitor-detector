@@ -12,6 +12,7 @@
     <string name="home_devices_tab_title">Home</string>
     <string name="device_menu_move_to_visitor">Set as visitor</string>
     <string name="device_menu_move_to_home">Set as home</string>
+    <string name="device_edit_description">Edit description</string>
     <string name="visitor_detected_notification_title">Visitor Detected</string>
     <string name="visitor_detected_notification_text">A non-home device has been detected on the network</string>
     <string name="error_fetching_devices">There was an issue fetching devices</string>

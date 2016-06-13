@@ -83,7 +83,7 @@ class AlarmReceiverTest {
             notificationManager,
             Devices(
                 homeDevices = listOf(),
-                visitorDevices = listOf(SavedDevice(macAddress = "123456"))
+                visitorDevices = listOf(SavedDevice(macAddress = "123456", description = ""))
             ),
             detectedNotification = detectedNotification
         )
@@ -103,7 +103,7 @@ class AlarmReceiverTest {
         val runner = createAlarmReceiverRunner(
             notificationManager,
             Devices(
-                homeDevices = listOf(SavedDevice(macAddress = "123456")),
+                homeDevices = listOf(SavedDevice(macAddress = "123456", description = "")),
                 visitorDevices = listOf()
             )
         )
