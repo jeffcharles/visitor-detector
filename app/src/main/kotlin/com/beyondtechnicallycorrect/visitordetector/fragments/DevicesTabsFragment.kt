@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
+import android.support.v4.widget.SwipeRefreshLayout
 import android.view.ActionMode
 import android.view.LayoutInflater
 import android.view.View
@@ -22,6 +23,7 @@ import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
 import com.beyondtechnicallycorrect.visitordetector.events.DeviceDescriptionSetEvent
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
+import com.beyondtechnicallycorrect.visitordetector.events.RefreshDeviceListEvent
 import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment.ArgumentProvider
 import com.beyondtechnicallycorrect.visitordetector.models.Device
 import com.beyondtechnicallycorrect.visitordetector.persistence.DevicePersistence
@@ -61,6 +63,7 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
             .inject(this)
 
         alarmSchedulingHelper.setupAlarm()
+        eventBus.register(this)
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -129,6 +132,16 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
         adapter.setFragmentForType(deviceType, devicesFragment)
     }
 
+    // used by EventBus
+    fun onEvent(refreshDeviceListEvent: RefreshDeviceListEvent) {
+        GetDevicesTask(
+            refreshDeviceListEvent.context,
+            devicesOnRouterProvider,
+            adapter,
+            refreshDeviceListEvent.swipeRefreshLayout
+        ).execute()
+    }
+
     interface Callbacks {
         fun enableNavigationDrawer()
     }
@@ -136,7 +149,8 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
     private class GetDevicesTask(
         val context: Context,
         val devicesOnRouterProvider: DevicesOnRouterProvider,
-        val adapter: PagerAdapter
+        val adapter: PagerAdapter,
+        val swipeRefresh: SwipeRefreshLayout? = null
     ) : AsyncTask<Void, Void, Either<DeviceFetchingFailure, List<RouterDevice>>>() {
 
         override fun doInBackground(
@@ -153,6 +167,7 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
                 is Either.Left -> Toast.makeText(context, R.string.error_fetching_devices, Toast.LENGTH_LONG).show()
                 is Either.Right -> adapter.setConnectedDevices(connectedDevices.right().get())
             }
+            swipeRefresh?.isRefreshing = false
         }
     }
 
