@@ -6,12 +6,14 @@ import android.os.Bundle
 import android.support.annotation.NonNull
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.ListFragment
+import android.support.v4.widget.SwipeRefreshLayout
 import android.view.*
 import android.widget.*
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToHomeList
 import com.beyondtechnicallycorrect.visitordetector.events.DevicesMovedToVisitorList
+import com.beyondtechnicallycorrect.visitordetector.events.RefreshDeviceListEvent
 import com.beyondtechnicallycorrect.visitordetector.models.Device
 import de.greenrobot.event.EventBus
 import timber.log.Timber
@@ -49,9 +51,27 @@ class DevicesFragment() : ListFragment() {
         return inflater!!.inflate(R.layout.fragment_devices_list, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Timber.v("onViewCreated")
+
+        val swipeRefreshLayout = view.findViewById(R.id.swipe_refresh) as SwipeRefreshLayout
+        swipeRefreshLayout.setOnRefreshListener {
+            eventBus.post(RefreshDeviceListEvent(context, swipeRefreshLayout))
+        }
+
+        this.listView.setOnScrollListener(object : AbsListView.OnScrollListener {
+            override fun onScroll(view: AbsListView?, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
+                val distanceBetweenTopOfParentViewAndTopOfListView =
+                    if (listView.childCount == 0) 0 else listView.getChildAt(0).top
+                swipeRefreshLayout.isEnabled =
+                    firstVisibleItem == 0 && distanceBetweenTopOfParentViewAndTopOfListView >= 0
+            }
+
+            override fun onScrollStateChanged(view: AbsListView?, scrollState: Int) {
+            }
+        })
+
         this.listView.setMultiChoiceModeListener(object : AbsListView.MultiChoiceModeListener {
 
             override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
