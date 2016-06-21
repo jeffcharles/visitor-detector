@@ -2,6 +2,7 @@ package com.beyondtechnicallycorrect.visitordetector.broadcastreceivers
 
 import android.app.Notification
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.support.v7.app.NotificationCompat
 import com.beyondtechnicallycorrect.visitordetector.AlarmSchedulingHelper
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
+import com.beyondtechnicallycorrect.visitordetector.activities.MainActivity
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DeviceFetchingFailure
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.DevicesOnRouterProvider
 import com.beyondtechnicallycorrect.visitordetector.deviceproviders.RouterDevice
@@ -101,6 +103,9 @@ class AlarmReceiver : BroadcastReceiver() {
                 .setSmallIcon(R.drawable.ic_error_white_24dp)
                 .setContentTitle(context.getString(R.string.error_fetching_devices_notification_title))
                 .setContentText(context.getString(R.string.error_fetching_devices))
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setContentIntent(createPendingIntent(context))
+                .setAutoCancel(true)
                 .build()
         }
 
@@ -109,7 +114,20 @@ class AlarmReceiver : BroadcastReceiver() {
                 .setSmallIcon(R.drawable.ic_person_white_24dp)
                 .setContentTitle(context.getString(R.string.visitor_detected_notification_title))
                 .setContentText(context.getString(R.string.visitor_detected_notification_text))
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setContentIntent(createPendingIntent(context))
+                .setAutoCancel(true)
                 .build()
+        }
+
+        private fun createPendingIntent(context: Context): PendingIntent {
+            val requestCode = 0
+            return PendingIntent.getActivity(
+                context,
+                requestCode,
+                Intent(context, MainActivity::class.java),
+                PendingIntent.FLAG_CANCEL_CURRENT
+            )
         }
     }
 
