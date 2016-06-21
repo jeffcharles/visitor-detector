@@ -31,18 +31,10 @@ class AlarmSchedulingHelperImpl @Inject constructor(
                 now.withTime(timeToExecute)
         Timber.d("Setting alarm for %s", nextTimeToExecute)
         val nextTimeToExecuteMillis = nextTimeToExecute.millis
-        if (Build.VERSION.SDK_INT < 23) {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                nextTimeToExecuteMillis,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                nextTimeToExecuteMillis,
-                pendingIntent
-            )
-        }
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            nextTimeToExecuteMillis,
+            pendingIntent
+        )
     }
 }
