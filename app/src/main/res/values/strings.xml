@@ -6,6 +6,7 @@
     <string name="main_activity_close_drawer">Close navigation drawer</string>
     <string name="drawer_devices_title">Devices</string>
     <string name="drawer_settings_title">Settings</string>
+    <string name="drawer_license_attributions_title">Licenses</string>
     <string name="device_tabs_fragment_title">Devices</string>
     <string name="unclassified_devices_tab_title">Unclassified</string>
     <string name="visitor_devices_tab_title">Visitor</string>
@@ -17,6 +18,7 @@
     <string name="visitor_detected_notification_text">A non-home device has been detected on the network</string>
     <string name="error_fetching_devices">There was an issue fetching devices</string>
     <string name="error_fetching_devices_notification_title">Error detecting visitors</string>
+    <string name="license_attributions_fragment_title">Licenses</string>
     <string name="settings_fragment_title">Settings</string>
     <string name="settings_home_wifi_networks">Home wifi networks</string>
     <string name="settings_values_split_by_newline">Split multiple values by newline</string>
