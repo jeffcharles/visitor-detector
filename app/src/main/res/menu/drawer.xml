@@ -9,5 +9,8 @@
             android:id="@+id/drawer_settings"
             android:icon="@drawable/ic_settings_black_24dp"
             android:title="@string/drawer_settings_title" />
+        <item
+            android:id="@+id/drawer_license_attributions"
+            android:title="@string/drawer_license_attributions_title" />
     </group>
 </menu>

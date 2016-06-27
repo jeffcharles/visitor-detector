@@ -10,10 +10,7 @@ import android.view.ActionMode
 import android.view.MenuItem
 import com.beyondtechnicallycorrect.visitordetector.R
 import com.beyondtechnicallycorrect.visitordetector.VisitorDetectorApplication
-import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesFragment
-import com.beyondtechnicallycorrect.visitordetector.fragments.DevicesTabsFragment
-import com.beyondtechnicallycorrect.visitordetector.fragments.SettingsFragment
-import com.beyondtechnicallycorrect.visitordetector.fragments.WelcomeFragment
+import com.beyondtechnicallycorrect.visitordetector.fragments.*
 import com.beyondtechnicallycorrect.visitordetector.models.Device
 import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettingsGetter
 import timber.log.Timber
@@ -56,6 +53,10 @@ class MainActivity : AppCompatActivity(), DevicesFragment.ArgumentProvider, Devi
                 R.id.drawer_settings -> supportFragmentManager
                     .beginTransaction()
                     .replace(R.id.fragment_container, SettingsFragment())
+                    .commit()
+                R.id.drawer_license_attributions -> supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, LicenseAttributionsFragment())
                     .commit()
                 else -> throw IllegalArgumentException("Invalid menu item")
             }
