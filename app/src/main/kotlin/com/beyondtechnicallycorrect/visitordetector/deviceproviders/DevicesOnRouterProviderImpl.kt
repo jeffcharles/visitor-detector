@@ -4,9 +4,11 @@ import android.net.wifi.WifiManager
 import com.beyondtechnicallycorrect.visitordetector.BuildConfig
 import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettings
 import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettingsGetter
+import com.google.common.net.InetAddresses
 import dagger.Module
 import dagger.Provides
 import org.funktionale.either.Either
+import retrofit2.Call
 import retrofit2.Response
 import timber.log.Timber
 import java.io.IOException
@@ -34,87 +36,98 @@ class DevicesOnRouterProviderImpl @Inject constructor(
 
         val routerApi = routerApiFactory.createRouterApi(routerSettings.routerIpAddress)
 
-        val auth = login(routerApi, routerSettings.routerUsername, routerSettings.routerPassword)
-        if (auth.isLeft()) {
-            return Either.Left(auth.left().get())
-        }
-
-        val macAddressHints = getMacAddresses(routerApi, auth.right().get())
-        if (macAddressHints.isLeft()) {
-            return Either.Left(macAddressHints.left().get())
-        }
-
-        return Either.Right(
-            macAddressHints.right().get().map { RouterDevice(macAddress = it[0], hostName = it[1]) }
-        )
-    }
-
-    private fun login(
-        routerApi: RouterApi,
-        routerUsername: String,
-        routerPassword: String
-    ): Either<DeviceFetchingFailure, String> {
-        val loginCall =
+        val auth = processRequest(
             routerApi.login(
                 loginBody = JsonRpcRequest(
                     jsonrpc = "2.0",
                     id = UUID.randomUUID().toString(),
                     method = "login",
-                    params = arrayOf(routerUsername, routerPassword)
+                    params = arrayOf(routerSettings.routerUsername, routerSettings.routerPassword)
                 )
-            )
-        val loginResponse: Response<JsonRpcResponse<String>>
-        try {
-            loginResponse = loginCall.execute()
-        } catch (e: IOException) {
-            Timber.w(e, "IOException while logging in")
-            return Either.Left(DeviceFetchingFailure.Error)
+            ),
+            "login"
+        )
+        if (auth.isLeft()) {
+            return Either.Left(auth.left().get())
         }
-        if (!loginResponse.isSuccessful) {
-            Timber.w("Got status code of %d while logging in", loginResponse.code())
-            return Either.Left(DeviceFetchingFailure.Error)
-        }
-        val loginResponseBody = loginResponse.body()
-        val auth = loginResponseBody.result
-        if (auth == null) {
-            Timber.w("Authentication call didn't return result")
-            return Either.Left(DeviceFetchingFailure.Error)
-        }
-        return Either.Right(auth)
-    }
 
-    private fun getMacAddresses(
-        routerApi: RouterApi,
-        auth: String
-    ): Either<DeviceFetchingFailure, Array<Array<String>>> {
-        val macAddressCall =
-            routerApi.sys(
+        val arpTable = processRequest(
+            routerApi.arp(
+                body = JsonRpcRequest(
+                    jsonrpc = "2.0",
+                    id = UUID.randomUUID().toString(),
+                    method = "net.arptable",
+                    params = arrayOf<String>()
+                ),
+                auth = auth.right().get()
+            ),
+            "arptable"
+        )
+        if (arpTable.isLeft()) {
+            return Either.Left(arpTable.left().get())
+        }
+
+        val activeConnections = processRequest(
+            routerApi.conntrack(
+                body = JsonRpcRequest(
+                    jsonrpc = "2.0",
+                    id = UUID.randomUUID().toString(),
+                    method = "net.conntrack",
+                    params = arrayOf<String>()
+                ),
+                auth = auth.right().get()
+            ),
+            "conntrack"
+        )
+        if (activeConnections.isLeft()) {
+            return Either.Left(activeConnections.left().get())
+        }
+        val activeIps = activeConnections.right().get().map { it.src }
+
+        val machints = processRequest(
+            routerApi.macHints(
                 body = JsonRpcRequest(
                     jsonrpc = "2.0",
                     id = UUID.randomUUID().toString(),
                     method = "net.mac_hints",
                     params = arrayOf<String>()
                 ),
-                auth = auth
-            )
-        val macAddressResponse: Response<JsonRpcResponse<Array<Array<String>>>>
+                auth = auth.right().get()
+            ),
+            "mac_hints"
+        )
+        if (machints.isLeft()) {
+            return Either.Left(machints.left().get())
+        }
+        val macToHostName = machints.right().get().associate { Pair(it[0].toLowerCase(), it[1]) }
+
+        return Either.Right(
+            arpTable.right().get().filter {
+                activeIps.contains(it.ipAddress)
+            }.map {
+                RouterDevice(macAddress = it.hwAddress, hostName = macToHostName.getOrElse(it.hwAddress, { it.ipAddress }))
+            }
+        )
+    }
+
+    private fun <T> processRequest(request: Call<JsonRpcResponse<T>>, descriptionForLog: String): Either<DeviceFetchingFailure, T> {
+        val response: Response<JsonRpcResponse<T>>
         try {
-            macAddressResponse = macAddressCall.execute()
+            response = request.execute()
         } catch (e: IOException) {
-            Timber.w(e, "IOException while getting mac addresses")
+            Timber.w(e, "IO exception during %s", descriptionForLog)
             return Either.Left(DeviceFetchingFailure.Error)
         }
-        if (!macAddressResponse.isSuccessful) {
-            Timber.w("Got status code of %d while getting mac addresses", macAddressResponse.code())
+        if (!response.isSuccessful) {
+            Timber.w("Got status code of %d during %s", descriptionForLog)
             return Either.Left(DeviceFetchingFailure.Error)
         }
-        val macAddressBody = macAddressResponse.body()
-        val macAddressHints = macAddressBody.result
-        if (macAddressHints == null) {
-            Timber.w("mac_hints didn't return result")
+        val result = response.body().result
+        if (result == null) {
+            Timber.w("%s didn't return result", descriptionForLog)
             return Either.Left(DeviceFetchingFailure.Error)
         }
-        return Either.Right(macAddressHints)
+        return Either.Right(result)
     }
 
     class OnHomeWifiImpl @Inject constructor(

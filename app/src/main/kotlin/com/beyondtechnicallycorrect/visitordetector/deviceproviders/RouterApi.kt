@@ -10,5 +10,11 @@ interface RouterApi {
     fun login(@Body loginBody: JsonRpcRequest): Call<JsonRpcResponse<String>>
 
     @POST("/cgi-bin/luci/rpc/sys")
-    fun sys(@Body body: JsonRpcRequest, @Query("auth") auth: String): Call<JsonRpcResponse<Array<Array<String>>>>
+    fun arp(@Body body: JsonRpcRequest, @Query("auth") auth: String): Call<JsonRpcResponse<Array<ArpTableEntry>>>
+
+    @POST("/cgi-bin/luci/rpc/sys")
+    fun conntrack(@Body body: JsonRpcRequest, @Query("auth") auth: String): Call<JsonRpcResponse<Array<ConntrackEntry>>>
+
+    @POST("/cgi-bin/luci/rpc/sys")
+    fun macHints(@Body body: JsonRpcRequest, @Query("auth") auth: String): Call<JsonRpcResponse<Array<Array<String>>>>
 }
