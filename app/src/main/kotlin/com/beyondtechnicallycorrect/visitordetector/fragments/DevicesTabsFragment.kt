@@ -66,6 +66,11 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
         eventBus.register(this)
     }
 
+    override fun onDestroy() {
+        eventBus.unregister(this)
+        super.onDestroy()
+    }
+
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
         super.onCreateView(inflater, container, savedInstanceState)
         Timber.v("onCreateView")
@@ -93,7 +98,6 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
 
         adapter = PagerAdapter(
             childFragmentManager,
-            eventBus,
             this.context,
             devicePersistence,
             unclassifiedDevicesList,
@@ -142,6 +146,21 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
         ).execute()
     }
 
+    // used by EventBus
+    fun onEvent(event: DevicesMovedToHomeList) {
+        adapter.onDevicesMovedToHomeList(event)
+    }
+
+    // used by EventBus
+    fun onEvent(event: DevicesMovedToVisitorList) {
+        adapter.onDevicesMovedToVisitorList(event)
+    }
+
+    // used by EventBus
+    fun onEvent(deviceDescriptionSetEvent: DeviceDescriptionSetEvent) {
+        adapter.onDeviceDescriptionSet(deviceDescriptionSetEvent)
+    }
+
     interface Callbacks {
         fun enableNavigationDrawer()
     }
@@ -173,7 +192,6 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
 
     private class PagerAdapter(
         fm: FragmentManager,
-        eventBus: EventBus,
         val context: Context,
         val devicePersistence: DevicePersistence,
         val unclassifiedDevicesList: MutableList<Device>,
@@ -184,10 +202,6 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
         private var unclassifiedDevicesFragment: DevicesFragment? = null
         private var visitorDevicesFragment: DevicesFragment? = null
         private var homeDevicesFragment: DevicesFragment? = null
-
-        init {
-            eventBus.register(this)
-        }
 
         override fun getCount(): Int {
             return 3;
@@ -211,8 +225,7 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
             }
         }
 
-        // used by EventBus
-        fun onEvent(event: DevicesMovedToHomeList) {
+        fun onDevicesMovedToHomeList(event: DevicesMovedToHomeList) {
             if (homeDevicesFragment != null && homeDevicesFragment!!.isAdded) {
                 homeDevicesFragment!!.addDevices(event.devices)
             } else {
@@ -221,8 +234,7 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
             save()
         }
 
-        // used by EventBus
-        fun onEvent(event: DevicesMovedToVisitorList) {
+        fun onDevicesMovedToVisitorList(event: DevicesMovedToVisitorList) {
             if (visitorDevicesFragment != null && visitorDevicesFragment!!.isAdded) {
                 visitorDevicesFragment!!.addDevices(event.devices)
             } else {
@@ -231,9 +243,8 @@ class DevicesTabsFragment() : Fragment(), ArgumentProvider {
             save()
         }
 
-        // used by EventBus
-        fun onEvent(deviceDescriptionSetEvent: DeviceDescriptionSetEvent) {
-            Timber.v("onEvent(deviceDescriptionSetEvent = %s)", deviceDescriptionSetEvent)
+        fun onDeviceDescriptionSet(deviceDescriptionSetEvent: DeviceDescriptionSetEvent) {
+            Timber.v("onDevicesMovedToHomeList(deviceDescriptionSetEvent = %s)", deviceDescriptionSetEvent)
             var shouldSave = false
             var refreshUnclassified: Boolean
             var refreshHome = false
