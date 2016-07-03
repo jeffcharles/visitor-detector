@@ -1,6 +1,7 @@
 package com.beyondtechnicallycorrect.visitordetector.deviceproviders
 
 import android.net.wifi.WifiManager
+import android.os.Build
 import com.beyondtechnicallycorrect.visitordetector.BuildConfig
 import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettings
 import com.beyondtechnicallycorrect.visitordetector.settings.RouterSettingsGetter
@@ -134,7 +135,10 @@ class DevicesOnRouterProviderImpl @Inject constructor(
         private val wifiManager: WifiManager
     ) : DevicesOnRouterProvider.OnHomeWifi {
         override fun isOnHomeWifi(homeSsids: List<String>): Boolean {
-            return BuildConfig.DEBUG ||
+            // see http://stackoverflow.com/questions/2799097/how-can-i-detect-when-an-android-application-is-running-in-the-emulator/13815880#13815880
+            val isRunningInEmulator =
+                Build.HARDWARE.equals("goldfish") || Build.HARDWARE.equals("ranchu")
+            return isRunningInEmulator ||
                 homeSsids
                     .map { "\"$it\"" }
                     .contains(wifiManager.connectionInfo.ssid)
